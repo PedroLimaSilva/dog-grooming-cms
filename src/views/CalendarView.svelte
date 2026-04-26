@@ -85,8 +85,8 @@
     longPressDelay: 280,
     eventLongPressDelay: 350,
     selectLongPressDelay: 350,
-    slotMinTime: '08:00:00',
-    slotMaxTime: '19:00:00',
+    slotMinTime: '07:00:00',
+    slotMaxTime: '24:00:00',
     nowIndicator: true,
     headerToolbar: {
       start: 'prev,next today',
