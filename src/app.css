@@ -15,10 +15,9 @@
   --shadow-tabbar: 0 -4px 20px rgba(0, 0, 0, 0.06);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --header-h: calc(52px + var(--safe-top));
   /* Matches App.svelte tabbar: 0.5rem + 48px + 0.5rem + safe-bottom */
   --tabbar-h: calc(1rem + 48px + var(--safe-bottom));
-  --main-h: calc(100dvh - var(--header-h) - var(--tabbar-h));
+  --main-h: calc(100dvh - var(--tabbar-h));
   font-family:
     system-ui,
     -apple-system,

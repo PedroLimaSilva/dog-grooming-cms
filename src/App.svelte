@@ -15,11 +15,6 @@
 </script>
 
 <div class="app-root">
-  <header class="top">
-    <h1 class="brand">Grooming</h1>
-    <p class="tag">On-device salon CMS</p>
-  </header>
-
   <main class="main">
     {#if tab === 'calendar'}
       <CalendarView />
@@ -47,27 +42,10 @@
     display: flex;
     flex-direction: column;
   }
-  .top {
-    flex: 0 0 auto;
-    padding: calc(0.65rem + var(--safe-top)) 1rem 0.65rem;
-    background: var(--color-primary);
-    color: var(--color-primary-contrast);
-  }
-  .brand {
-    margin: 0;
-    font-size: 1.35rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-  .tag {
-    margin: 0.15rem 0 0;
-    font-size: 0.8rem;
-    opacity: 0.9;
-  }
   .main {
     flex: 1 1 auto;
     min-height: 0;
-    padding: 0.65rem 0.75rem calc(0.5rem + var(--tabbar-h));
+    padding: calc(0.65rem + var(--safe-top)) 0.75rem calc(0.5rem + var(--tabbar-h));
     overflow: auto;
   }
   .tabbar {
