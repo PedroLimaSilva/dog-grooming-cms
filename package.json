@@ -1,0 +1,31 @@
+{
+  "name": "dog-grooming-cms",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^24.12.2",
+    "svelte": "^5.55.4",
+    "svelte-check": "^4.4.6",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.10",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-build": "7.4.0",
+    "workbox-window": "^7.4.0"
+  },
+  "dependencies": {
+    "@event-calendar/core": "^5.7.0",
+    "dexie": "^4.4.2"
+  }
+}

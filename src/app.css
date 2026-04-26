@@ -1,0 +1,187 @@
+:root {
+  --color-bg: #f0f4f2;
+  --color-surface: #ffffff;
+  --color-text: #14241c;
+  --color-muted: #5a6b62;
+  --color-primary: #1a5f4a;
+  --color-primary-contrast: #f4fbf8;
+  --color-border: #c5d4cc;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --header-h: calc(52px + var(--safe-top));
+  --tabbar-h: calc(56px + var(--safe-bottom));
+  --main-h: calc(100dvh - var(--header-h) - var(--tabbar-h));
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.45;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--color-bg);
+}
+
+#app {
+  min-height: 100dvh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border-color: var(--color-primary);
+}
+
+button.danger {
+  background: #b42318;
+  border-color: #b42318;
+  color: #fff;
+}
+
+input,
+select,
+textarea {
+  min-height: 44px;
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  width: 100%;
+  background: var(--color-surface);
+}
+
+label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--color-muted);
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  padding: var(--safe-top) 0 var(--safe-bottom);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .sheet-backdrop {
+    align-items: center;
+    padding: 1rem;
+  }
+}
+
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: min(90dvh, 720px);
+  overflow: auto;
+  background: var(--color-surface);
+  border-radius: 16px 16px 0 0;
+  padding: 1rem 1rem calc(1rem + var(--safe-bottom));
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+}
+
+@media (min-width: 640px) {
+  .sheet {
+    border-radius: 16px;
+    padding: 1.25rem;
+  }
+}
+
+.sheet h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.list-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.list-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.list-card p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.empty-hint {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  padding: 1rem 0;
+}
+
+.error-text {
+  color: #b42318;
+  font-size: 0.875rem;
+  margin-top: 0.35rem;
+}
+
+/* Event calendar fills main area */
+.ec-shell {
+  height: var(--main-h);
+  min-height: 280px;
+}
+
+.ec-shell .ec {
+  --ec-border-color: var(--color-border);
+  --ec-button-bg-color: var(--color-surface);
+  --ec-button-border-color: var(--color-border);
+  --ec-button-text-color: var(--color-text);
+  --ec-today-bg-color: rgba(26, 95, 74, 0.08);
+}
