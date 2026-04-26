@@ -12,6 +12,7 @@
   --color-primary-highlight: rgba(26, 95, 74, 0.08);
   --color-danger: #b42318;
   --color-danger-contrast: #fff;
+  --shadow-tabbar: 0 -4px 20px rgba(0, 0, 0, 0.06);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --header-h: calc(52px + var(--safe-top));
@@ -41,8 +42,9 @@
     --color-primary-soft-bg: rgba(79, 196, 160, 0.18);
     --color-primary-soft-border: rgba(79, 196, 160, 0.35);
     --color-primary-highlight: rgba(79, 196, 160, 0.14);
-    --color-danger: #f87171;
-    --color-danger-contrast: #1a0a0a;
+    --color-danger: #dc2626;
+    --color-danger-contrast: #fff;
+    --shadow-tabbar: 0 -4px 24px rgba(0, 0, 0, 0.5);
   }
 }
 

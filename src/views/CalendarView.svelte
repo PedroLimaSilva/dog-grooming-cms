@@ -144,7 +144,7 @@
   })
 </script>
 
-<div class="ec-shell">
+<div class="ec-shell ec-auto-dark">
   <Calendar bind:this={calendarInst} {plugins} {options} />
 </div>
 
@@ -173,7 +173,7 @@
   .banner {
     margin: 0.5rem 0 0;
     padding: 0.65rem 0.85rem;
-    background: rgba(26, 95, 74, 0.12);
+    background: var(--color-primary-soft-bg);
     border-radius: 10px;
     font-size: 0.9rem;
   }

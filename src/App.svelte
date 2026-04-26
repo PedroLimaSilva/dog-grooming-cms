@@ -82,7 +82,7 @@
     padding: 0.5rem 0.75rem calc(0.5rem + var(--safe-bottom));
     background: var(--color-surface);
     border-top: 1px solid var(--color-border);
-    box-shadow: 0 -4px 20px color-mix(in srgb, var(--color-text) 6%, transparent);
+    box-shadow: var(--shadow-tabbar);
   }
   .tabbar button {
     min-height: 48px;
