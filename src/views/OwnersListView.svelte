@@ -1,10 +1,12 @@
 <script lang="ts">
   import { liveQuery } from 'dexie'
   import { onMount } from 'svelte'
+  import SearchField from '../components/SearchField.svelte'
   import type { OwnerRecord } from '../db'
   import { db } from '../db'
 
   let rows = $state<OwnerRecord[]>([])
+  let searchQuery = $state('')
 
   onMount(() => {
     const sub = liveQuery(() => db.owners.orderBy('name').toArray()).subscribe({
@@ -14,6 +16,13 @@
     })
     return () => sub.unsubscribe()
   })
+
+  const normalizedSearch = $derived(searchQuery.trim().toLocaleLowerCase())
+  const filteredRows = $derived(
+    normalizedSearch
+      ? rows.filter((o) => [o.name, o.phone, o.email].some((v) => v?.toLocaleLowerCase().includes(normalizedSearch)))
+      : rows,
+  )
 </script>
 
 <div class="panel">
@@ -25,10 +34,14 @@
     <a href="#/owners/new" class="primary">Add owner</a>
   </div>
 
+  <SearchField bind:value={searchQuery} placeholder="Search owners" label="Search owners" />
+
   {#if rows.length === 0}
     <p class="empty-hint">No owners yet. Add one before adding dogs.</p>
+  {:else if filteredRows.length === 0}
+    <p class="empty-hint">No owners match "{searchQuery.trim()}".</p>
   {:else}
-    {#each rows as o (o.id)}
+    {#each filteredRows as o (o.id)}
       {#if o.id != null}
         <a class="list-card list-card-link" href="#/owners/{o.id}">
           <h2>{o.name}</h2>
