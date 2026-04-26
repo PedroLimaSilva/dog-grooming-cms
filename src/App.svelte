@@ -1,36 +1,62 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { seedIfEmpty } from './db'
+  import { formatRoute, readRouteFromLocation, tabFromRoute, type AppRoute } from './lib/hashRoute'
   import CalendarView from './views/CalendarView.svelte'
-  import DogsView from './views/DogsView.svelte'
-  import OwnersView from './views/OwnersView.svelte'
+  import DogDetailView from './views/DogDetailView.svelte'
+  import DogsListView from './views/DogsListView.svelte'
+  import OwnerDetailView from './views/OwnerDetailView.svelte'
+  import OwnersListView from './views/OwnersListView.svelte'
 
-  type Tab = 'calendar' | 'dogs' | 'owners'
-
-  let tab = $state<Tab>('calendar')
+  let route = $state<AppRoute>(readRouteFromLocation())
 
   onMount(() => {
     void seedIfEmpty()
+    const onHash = () => {
+      route = readRouteFromLocation()
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
   })
+
+  function go(tab: 'calendar' | 'dogs' | 'owners') {
+    if (tab === 'calendar') window.location.hash = formatRoute({ name: 'calendar' })
+    if (tab === 'dogs') window.location.hash = formatRoute({ name: 'dogs', segment: 'list' })
+    if (tab === 'owners') window.location.hash = formatRoute({ name: 'owners', segment: 'list' })
+  }
 </script>
 
 <div class="app-root">
   <main class="main">
-    {#if tab === 'calendar'}
+    {#if route.name === 'calendar'}
       <CalendarView />
-    {:else if tab === 'dogs'}
-      <DogsView />
+    {:else if route.name === 'dogs'}
+      {#if route.segment === 'list'}
+        <DogsListView />
+      {:else if route.segment === 'new'}
+        <DogDetailView mode="new" />
+      {:else}
+        {#key route.segment.id}
+          <DogDetailView mode="edit" dogId={route.segment.id} />
+        {/key}
+      {/if}
+    {:else if route.segment === 'list'}
+      <OwnersListView />
+    {:else if route.segment === 'new'}
+      <OwnerDetailView mode="new" />
     {:else}
-      <OwnersView />
+      {#key route.segment.id}
+        <OwnerDetailView mode="edit" ownerId={route.segment.id} />
+      {/key}
     {/if}
   </main>
 
   <nav class="tabbar" aria-label="Main">
-    <button type="button" class:active={tab === 'calendar'} onclick={() => (tab = 'calendar')}>
+    <button type="button" class:active={tabFromRoute(route) === 'calendar'} onclick={() => go('calendar')}>
       Calendar
     </button>
-    <button type="button" class:active={tab === 'dogs'} onclick={() => (tab = 'dogs')}>Dogs</button>
-    <button type="button" class:active={tab === 'owners'} onclick={() => (tab = 'owners')}>
+    <button type="button" class:active={tabFromRoute(route) === 'dogs'} onclick={() => go('dogs')}>Dogs</button>
+    <button type="button" class:active={tabFromRoute(route) === 'owners'} onclick={() => go('owners')}>
       Owners
     </button>
   </nav>

@@ -149,7 +149,9 @@
 </div>
 
 {#if dogs.length === 0}
-  <p class="banner">Add at least one dog (and owner) under <strong>Dogs</strong> before booking.</p>
+  <p class="banner">
+    Add at least one dog (and owner) in <a href="#/dogs/new">Dogs</a> before booking.
+  </p>
 {/if}
 
 <AppointmentFormModal
@@ -176,5 +178,9 @@
     background: var(--color-primary-soft-bg);
     border-radius: 10px;
     font-size: 0.9rem;
+  }
+  .banner a {
+    color: var(--color-primary);
+    font-weight: 700;
   }
 </style>
