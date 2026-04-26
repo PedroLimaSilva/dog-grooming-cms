@@ -40,8 +40,8 @@
     if (!query) return dogs
 
     return dogs.filter((d) =>
-      [d.name, d.breed, ownerLabel(d.primaryOwnerId), d.specialCareNotes].some((value) =>
-        normalize(value).includes(query),
+      [d.name, d.breed, d.dateOfBirth, ownerLabel(d.primaryOwnerId), d.specialCareNotes].some(
+        (value) => normalize(value).includes(query),
       ),
     )
   })
@@ -67,7 +67,12 @@
       {#if d.id != null}
         <a class="list-card list-card-link" href="#/dogs/{d.id}">
           <h2>{d.name}</h2>
-          <p>{d.breed} · {ownerLabel(d.primaryOwnerId)}</p>
+          <p>
+            {d.breed} · {ownerLabel(d.primaryOwnerId)}
+            {#if d.dateOfBirth}
+              · born {d.dateOfBirth}
+            {/if}
+          </p>
           {#if d.specialCareNotes}
             <p class="care">{d.specialCareNotes}</p>
           {/if}
