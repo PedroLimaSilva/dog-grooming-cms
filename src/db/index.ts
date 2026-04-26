@@ -19,6 +19,11 @@ export class GroomingDB extends Dexie {
       dogs: '++id, primaryOwnerId, name',
       appointments: '++id, dogId, start',
     })
+    this.version(2).stores({
+      owners: '++id, name',
+      dogs: '++id, primaryOwnerId, name',
+      appointments: '++id, dogId, start',
+    })
   }
 }
 
@@ -39,12 +44,14 @@ export async function seedIfEmpty(): Promise<void> {
   const cocoa = (await db.dogs.add({
     name: 'Cocoa',
     breed: 'Poodle',
+    dateOfBirth: '2020-03-15',
     specialCareNotes: 'Sensitive ears; no perfumed shampoo',
     primaryOwnerId: jamie,
   })) as number
   await db.dogs.add({
     name: 'Bear',
     breed: 'Golden Retriever',
+    dateOfBirth: '2019-07-01',
     primaryOwnerId: alex,
   })
 
@@ -86,6 +93,7 @@ export async function upsertDog(row: DogRecord): Promise<number> {
   return (await db.dogs.add({
     name: row.name,
     breed: row.breed,
+    dateOfBirth: row.dateOfBirth,
     specialCareNotes: row.specialCareNotes,
     primaryOwnerId: row.primaryOwnerId,
   })) as number

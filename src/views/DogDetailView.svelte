@@ -4,6 +4,7 @@
   import type { DogRecord, OwnerRecord } from '../db'
   import { db, deleteDog, upsertDog } from '../db'
   import { navigateTo } from '../lib/hashRoute'
+  import { phoneDigitsForWhatsApp, whatsAppChatUrl } from '../lib/whatsapp'
 
   type Props = { mode: 'new' | 'edit'; dogId?: number }
 
@@ -16,6 +17,8 @@
 
   let name = $state('')
   let breed = $state('')
+  /** `YYYY-MM-DD` for `<input type="date">`, or empty */
+  let dateOfBirth = $state('')
   let specialCareNotes = $state('')
   let primaryOwnerId = $state<number | ''>('')
   let err = $state('')
@@ -48,6 +51,7 @@
     if (mode !== 'edit' || !dog) return
     name = dog.name
     breed = dog.breed
+    dateOfBirth = dog.dateOfBirth ?? ''
     specialCareNotes = dog.specialCareNotes ?? ''
     primaryOwnerId = dog.primaryOwnerId
   })
@@ -75,6 +79,7 @@
         id: mode === 'edit' ? dogId : undefined,
         name: name.trim(),
         breed: breed.trim(),
+        dateOfBirth: dateOfBirth.trim() || undefined,
         specialCareNotes: specialCareNotes.trim() || undefined,
         primaryOwnerId: Number(primaryOwnerId),
       })
@@ -103,6 +108,20 @@
     const o = owners.find((x) => x.id === id)
     return o ? o.name : `#${id}`
   }
+
+  const selectedOwner = $derived.by(() => {
+    if (primaryOwnerId === '') return undefined
+    return owners.find((x) => x.id === Number(primaryOwnerId))
+  })
+
+  const whatsAppOwnerHref = $derived.by(() => {
+    const o = selectedOwner
+    if (!o?.phone) return ''
+    const digits = phoneDigitsForWhatsApp(o.phone)
+    if (!digits) return ''
+    const dogName = name.trim() || dog?.name || 'my dog'
+    return whatsAppChatUrl(o.phone, `Hi, this is regarding ${dogName}. `)
+  })
 </script>
 
 <div class="panel">
@@ -127,6 +146,16 @@
       </p>
     {/if}
 
+    {#if whatsAppOwnerHref}
+      <p class="meta-actions">
+        <a class="whatsapp" href={whatsAppOwnerHref} target="_blank" rel="noopener noreferrer">
+          Message owner on WhatsApp
+        </a>
+      </p>
+    {:else if selectedOwner}
+      <p class="meta-hint">Add digits to the owner’s phone (country code) to open WhatsApp.</p>
+    {/if}
+
     <form
       onsubmit={(e) => {
         e.preventDefault()
@@ -140,6 +169,10 @@
       <div class="field">
         <label for="dbreed">Breed</label>
         <input id="dbreed" bind:value={breed} />
+      </div>
+      <div class="field">
+        <label for="ddob">Date of birth</label>
+        <input id="ddob" type="date" bind:value={dateOfBirth} />
       </div>
       <div class="field">
         <label for="dnotes">Special care</label>
@@ -195,5 +228,31 @@
   .inline-link {
     color: var(--color-primary);
     font-weight: 600;
+  }
+  .meta-actions {
+    margin: 0 0 1rem;
+  }
+  .meta-hint {
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    color: var(--color-muted);
+  }
+  .whatsapp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid #128c7e;
+    background: #25d366;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+  .whatsapp:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 </style>

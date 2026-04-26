@@ -11,6 +11,8 @@ export type Dog = {
   id?: number
   name: string
   breed: string
+  /** Calendar date in local time, `YYYY-MM-DD` */
+  dateOfBirth?: string
   specialCareNotes?: string
   primaryOwnerId: number
 }
