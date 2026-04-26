@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Search from '@lucide/svelte/icons/search'
+
   type Props = {
     value?: string
     placeholder?: string
@@ -10,9 +12,9 @@
 
 <label class="search-field">
   <span class="sr-only">{label}</span>
-  <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="m21 21-4.35-4.35m2.35-5.15a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
-  </svg>
+  <span class="search-icon" aria-hidden="true">
+    <Search size={18.4} stroke-width={2} absoluteStrokeWidth />
+  </span>
   <input type="search" bind:value {placeholder} autocomplete="off" spellcheck="false" />
 </label>
 
