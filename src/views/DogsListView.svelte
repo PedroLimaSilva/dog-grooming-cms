@@ -1,11 +1,13 @@
 <script lang="ts">
   import { liveQuery } from 'dexie'
   import { onMount } from 'svelte'
+  import SearchField from '../components/SearchField.svelte'
   import type { DogRecord, OwnerRecord } from '../db'
   import { db } from '../db'
 
   let dogs = $state<DogRecord[]>([])
   let owners = $state<OwnerRecord[]>([])
+  let searchQuery = $state('')
 
   onMount(() => {
     const s1 = liveQuery(() => db.dogs.orderBy('name').toArray()).subscribe({
@@ -28,6 +30,21 @@
     const o = owners.find((x) => x.id === id)
     return o ? o.name : `#${id}`
   }
+
+  function normalize(value: string | undefined) {
+    return (value ?? '').trim().toLocaleLowerCase()
+  }
+
+  const filteredDogs = $derived.by(() => {
+    const query = normalize(searchQuery)
+    if (!query) return dogs
+
+    return dogs.filter((d) =>
+      [d.name, d.breed, ownerLabel(d.primaryOwnerId), d.specialCareNotes].some((value) =>
+        normalize(value).includes(query),
+      ),
+    )
+  })
 </script>
 
 <div class="panel">
@@ -39,10 +56,14 @@
     <a href="#/dogs/new" class="primary">Add dog</a>
   </div>
 
+  <SearchField bind:value={searchQuery} placeholder="Search dogs" label="Search dogs" />
+
   {#if dogs.length === 0}
     <p class="empty-hint">No dogs yet. Add one to start booking.</p>
+  {:else if filteredDogs.length === 0}
+    <p class="empty-hint">No dogs match "{searchQuery.trim()}".</p>
   {:else}
-    {#each dogs as d (d.id)}
+    {#each filteredDogs as d (d.id)}
       {#if d.id != null}
         <a class="list-card list-card-link" href="#/dogs/{d.id}">
           <h2>{d.name}</h2>
