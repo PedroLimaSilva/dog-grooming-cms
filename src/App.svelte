@@ -67,18 +67,22 @@
   .main {
     flex: 1 1 auto;
     min-height: 0;
-    padding: 0.65rem 0.75rem 0.5rem;
+    padding: 0.65rem 0.75rem calc(0.5rem + var(--tabbar-h));
     overflow: auto;
   }
   .tabbar {
-    flex: 0 0 auto;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0.35rem;
     padding: 0.5rem 0.75rem calc(0.5rem + var(--safe-bottom));
     background: var(--color-surface);
     border-top: 1px solid var(--color-border);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 -4px 20px color-mix(in srgb, var(--color-text) 6%, transparent);
   }
   .tabbar button {
     min-height: 48px;
@@ -89,8 +93,8 @@
     font-size: 0.9rem;
   }
   .tabbar button.active {
-    background: rgba(26, 95, 74, 0.12);
-    border-color: rgba(26, 95, 74, 0.25);
+    background: var(--color-primary-soft-bg);
+    border-color: var(--color-primary-soft-border);
     color: var(--color-primary);
   }
 </style>

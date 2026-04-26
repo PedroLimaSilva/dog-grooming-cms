@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --color-bg: #f0f4f2;
   --color-surface: #ffffff;
   --color-text: #14241c;
@@ -6,10 +7,16 @@
   --color-primary: #1a5f4a;
   --color-primary-contrast: #f4fbf8;
   --color-border: #c5d4cc;
+  --color-primary-soft-bg: rgba(26, 95, 74, 0.12);
+  --color-primary-soft-border: rgba(26, 95, 74, 0.25);
+  --color-primary-highlight: rgba(26, 95, 74, 0.08);
+  --color-danger: #b42318;
+  --color-danger-contrast: #fff;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --header-h: calc(52px + var(--safe-top));
-  --tabbar-h: calc(56px + var(--safe-bottom));
+  /* Matches App.svelte tabbar: 0.5rem + 48px + 0.5rem + safe-bottom */
+  --tabbar-h: calc(1rem + 48px + var(--safe-bottom));
   --main-h: calc(100dvh - var(--header-h) - var(--tabbar-h));
   font-family:
     system-ui,
@@ -20,6 +27,23 @@
   color: var(--color-text);
   background: var(--color-bg);
   line-height: 1.45;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0e1411;
+    --color-surface: #1a2420;
+    --color-text: #e6f0eb;
+    --color-muted: #8fa399;
+    --color-primary: #4fc4a0;
+    --color-primary-contrast: #061210;
+    --color-border: #2f3f37;
+    --color-primary-soft-bg: rgba(79, 196, 160, 0.18);
+    --color-primary-soft-border: rgba(79, 196, 160, 0.35);
+    --color-primary-highlight: rgba(79, 196, 160, 0.14);
+    --color-danger: #f87171;
+    --color-danger-contrast: #1a0a0a;
+  }
 }
 
 *,
@@ -64,9 +88,9 @@ button.primary {
 }
 
 button.danger {
-  background: #b42318;
-  border-color: #b42318;
-  color: #fff;
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-danger-contrast);
 }
 
 input,
@@ -167,7 +191,7 @@ label {
 }
 
 .error-text {
-  color: #b42318;
+  color: var(--color-danger);
   font-size: 0.875rem;
   margin-top: 0.35rem;
 }
@@ -183,5 +207,5 @@ label {
   --ec-button-bg-color: var(--color-surface);
   --ec-button-border-color: var(--color-border);
   --ec-button-text-color: var(--color-text);
-  --ec-today-bg-color: rgba(26, 95, 74, 0.08);
+  --ec-today-bg-color: var(--color-primary-highlight);
 }
