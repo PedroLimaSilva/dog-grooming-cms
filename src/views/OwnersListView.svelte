@@ -26,13 +26,7 @@
 </script>
 
 <div class="panel">
-  <div class="list-page-head">
-    <div>
-      <h1>Owners</h1>
-      <p class="hint">Primary contacts. Tap an owner for details.</p>
-    </div>
-    <a href="#/owners/new" class="primary">Add owner</a>
-  </div>
+  <p class="hint">Primary contacts. Tap an owner for details.</p>
 
   <SearchField bind:value={searchQuery} placeholder="Search owners" label="Search owners" />
 
@@ -58,19 +52,8 @@
     max-width: 560px;
     margin: 0 auto;
   }
-  .list-page-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  h1 {
-    margin: 0 0 0.35rem;
-    font-size: 1.25rem;
-  }
   .hint {
-    margin: 0;
+    margin: 0 0 1rem;
     color: var(--color-muted);
     font-size: 0.9rem;
   }

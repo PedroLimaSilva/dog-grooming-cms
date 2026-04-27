@@ -128,17 +128,9 @@
   {#if mode === 'edit' && dogId != null && !loaded}
     <p class="empty-hint">Loading…</p>
   {:else if mode === 'edit' && dogId != null && loaded && dog === undefined}
-    <header class="page-head">
-      <a href="#/dogs" class="back">← Dogs</a>
-      <h1>Dog not found</h1>
-    </header>
+    <h2>Dog not found</h2>
     <p class="empty-hint">This dog may have been removed.</p>
   {:else}
-    <header class="page-head">
-      <a href="#/dogs" class="back">← Dogs</a>
-      <h1>{mode === 'new' ? 'New dog' : dog?.name ?? 'Dog'}</h1>
-    </header>
-
     {#if mode === 'edit' && dog?.id != null}
       <p class="meta">
         Owner:
@@ -208,17 +200,9 @@
     max-width: 560px;
     margin: 0 auto;
   }
-  .page-head .back {
-    display: inline-block;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-primary);
-    text-decoration: none;
-    margin-bottom: 0.35rem;
-  }
-  .page-head h1 {
+  h2 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.15rem;
   }
   .meta {
     margin: 0 0 1rem;

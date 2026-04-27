@@ -48,13 +48,7 @@
 </script>
 
 <div class="panel">
-  <div class="list-page-head">
-    <div>
-      <h1>Dogs</h1>
-      <p class="hint">Clients who receive grooming. Tap a dog for details.</p>
-    </div>
-    <a href="#/dogs/new" class="primary">Add dog</a>
-  </div>
+  <p class="hint">Clients who receive grooming. Tap a dog for details.</p>
 
   <SearchField bind:value={searchQuery} placeholder="Search dogs" label="Search dogs" />
 
@@ -88,19 +82,8 @@
     max-width: 560px;
     margin: 0 auto;
   }
-  .list-page-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  h1 {
-    margin: 0 0 0.35rem;
-    font-size: 1.25rem;
-  }
   .hint {
-    margin: 0;
+    margin: 0 0 1rem;
     color: var(--color-muted);
     font-size: 0.9rem;
   }
