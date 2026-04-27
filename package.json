@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@event-calendar/core": "^5.7.0",
+    "@lucide/svelte": "^1.11.0",
     "dexie": "^4.4.2"
   }
 }

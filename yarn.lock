@@ -1229,6 +1229,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@lucide/svelte@npm:^1.11.0":
+  version: 1.11.0
+  resolution: "@lucide/svelte@npm:1.11.0"
+  peerDependencies:
+    svelte: ^5
+  checksum: 10c0/4d7d98dbaddcc209296afad6477fe8541be8c4e0edcbc1ee7e6ad3b2cb25c20e35214d85b63d7b7860cd0d2ec91abfe73b8f959bda25fbb55163d369680170f1
+  languageName: node
+  linkType: hard
+
 "@napi-rs/wasm-runtime@npm:^1.1.4":
   version: 1.1.4
   resolution: "@napi-rs/wasm-runtime@npm:1.1.4"
@@ -1951,6 +1960,7 @@ __metadata:
   resolution: "dog-grooming-cms@workspace:."
   dependencies:
     "@event-calendar/core": "npm:^5.7.0"
+    "@lucide/svelte": "npm:^1.11.0"
     "@sveltejs/vite-plugin-svelte": "npm:^7.0.0"
     "@tsconfig/svelte": "npm:^5.0.8"
     "@types/node": "npm:^24.12.2"
