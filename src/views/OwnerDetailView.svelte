@@ -90,17 +90,8 @@
   {#if mode === 'edit' && ownerId != null && !loaded}
     <p class="empty-hint">Loading…</p>
   {:else if mode === 'edit' && ownerId != null && loaded && owner === undefined}
-    <header class="page-head">
-      <a href="#/owners" class="back">← Owners</a>
-      <h1>Owner not found</h1>
-    </header>
     <p class="empty-hint">This owner may have been removed.</p>
   {:else}
-    <header class="page-head">
-      <a href="#/owners" class="back">← Owners</a>
-      <h1>{mode === 'new' ? 'New owner' : owner?.name ?? 'Owner'}</h1>
-    </header>
-
     <form
       onsubmit={(e) => {
         e.preventDefault()
@@ -152,18 +143,6 @@
     padding: 0 0 1rem;
     max-width: 560px;
     margin: 0 auto;
-  }
-  .page-head .back {
-    display: inline-block;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-primary);
-    text-decoration: none;
-    margin-bottom: 0.35rem;
-  }
-  .page-head h1 {
-    margin: 0;
-    font-size: 1.35rem;
   }
   .sub {
     margin: 1.5rem 0 0.75rem;
