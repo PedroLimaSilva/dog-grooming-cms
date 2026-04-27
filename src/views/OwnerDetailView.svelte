@@ -3,6 +3,7 @@
   import { onMount } from 'svelte'
   import type { DogRecord, OwnerRecord } from '../db'
   import { db, deleteOwner, upsertOwner } from '../db'
+  import { setAppChromeTitle, setTopOverflowDelegate } from '../lib/appChrome'
   import { navigateTo } from '../lib/hashRoute'
 
   type Props = { mode: 'new' | 'edit'; ownerId?: number }
@@ -40,6 +41,8 @@
     }
 
     return () => {
+      setAppChromeTitle(null)
+      setTopOverflowDelegate(null)
       sOwner?.unsubscribe()
       sDogs?.unsubscribe()
     }
@@ -49,6 +52,32 @@
     if (mode !== 'edit' || !owner) return
     name = owner.name
     phone = owner.phone
+  })
+
+  $effect(() => {
+    if (mode === 'new') {
+      const t = name.trim()
+      setAppChromeTitle(t || null)
+      setTopOverflowDelegate(null)
+      return
+    }
+    if (ownerId == null) {
+      setAppChromeTitle(null)
+      setTopOverflowDelegate(null)
+      return
+    }
+    if (!loaded) {
+      setAppChromeTitle(null)
+      setTopOverflowDelegate(null)
+      return
+    }
+    if (owner === undefined) {
+      setAppChromeTitle('Not found')
+      setTopOverflowDelegate(null)
+      return
+    }
+    setAppChromeTitle(name.trim() || owner.name)
+    setTopOverflowDelegate({ onDelete: () => void remove() })
   })
 
   async function save() {
@@ -90,17 +119,8 @@
   {#if mode === 'edit' && ownerId != null && !loaded}
     <p class="empty-hint">Loading…</p>
   {:else if mode === 'edit' && ownerId != null && loaded && owner === undefined}
-    <header class="page-head">
-      <a href="#/owners" class="back">← Owners</a>
-      <h1>Owner not found</h1>
-    </header>
     <p class="empty-hint">This owner may have been removed.</p>
   {:else}
-    <header class="page-head">
-      <a href="#/owners" class="back">← Owners</a>
-      <h1>{mode === 'new' ? 'New owner' : owner?.name ?? 'Owner'}</h1>
-    </header>
-
     <form
       onsubmit={(e) => {
         e.preventDefault()
@@ -120,9 +140,6 @@
         <button type="submit" class="primary" disabled={saving}>
           {mode === 'new' ? 'Add owner' : 'Save changes'}
         </button>
-        {#if mode === 'edit'}
-          <button type="button" class="danger" onclick={() => void remove()}>Delete</button>
-        {/if}
       </div>
     </form>
 
@@ -152,18 +169,6 @@
     padding: 0 0 1rem;
     max-width: 560px;
     margin: 0 auto;
-  }
-  .page-head .back {
-    display: inline-block;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-primary);
-    text-decoration: none;
-    margin-bottom: 0.35rem;
-  }
-  .page-head h1 {
-    margin: 0;
-    font-size: 1.35rem;
   }
   .sub {
     margin: 1.5rem 0 0.75rem;

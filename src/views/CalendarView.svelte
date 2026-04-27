@@ -7,6 +7,7 @@
   import MoveAppointmentSheet from '../components/MoveAppointmentSheet.svelte'
   import type { AppointmentRecord, DogRecord, OwnerRecord } from '../db'
   import { db, updateAppointmentTimes } from '../db'
+  import { setCalendarCreateHandler } from '../lib/appChrome'
 
   const plugins = [DayGrid, TimeGrid, Interaction]
 
@@ -25,6 +26,13 @@
   let moveFor = $state<AppointmentRecord | null>(null)
 
   onMount(() => {
+    setCalendarCreateHandler(() => {
+      const start = new Date()
+      const end = new Date(start.getTime() + 60 * 60 * 1000)
+      createStart = start
+      createEnd = end
+      createOpen = true
+    })
     const s1 = liveQuery(() => db.appointments.toArray()).subscribe({
       next: (v) => {
         appointments = v
@@ -41,6 +49,7 @@
       },
     })
     return () => {
+      setCalendarCreateHandler(null)
       s1.unsubscribe()
       s2.unsubscribe()
       s3.unsubscribe()

@@ -3,6 +3,7 @@
   import { onMount } from 'svelte'
   import type { DogRecord, OwnerRecord } from '../db'
   import { db, deleteDog, upsertDog } from '../db'
+  import { setAppChromeTitle, setTopOverflowDelegate } from '../lib/appChrome'
   import { navigateTo } from '../lib/hashRoute'
   import { phoneDigitsForWhatsApp, whatsAppChatUrl } from '../lib/whatsapp'
 
@@ -42,6 +43,8 @@
     }
 
     return () => {
+      setAppChromeTitle(null)
+      setTopOverflowDelegate(null)
       sOwners.unsubscribe()
       sDog?.unsubscribe()
     }
@@ -114,6 +117,32 @@
     return owners.find((x) => x.id === Number(primaryOwnerId))
   })
 
+  $effect(() => {
+    if (mode === 'new') {
+      const t = name.trim()
+      setAppChromeTitle(t || null)
+      setTopOverflowDelegate(null)
+      return
+    }
+    if (dogId == null) {
+      setAppChromeTitle(null)
+      setTopOverflowDelegate(null)
+      return
+    }
+    if (!loaded) {
+      setAppChromeTitle(null)
+      setTopOverflowDelegate(null)
+      return
+    }
+    if (dog === undefined) {
+      setAppChromeTitle('Not found')
+      setTopOverflowDelegate(null)
+      return
+    }
+    setAppChromeTitle(name.trim() || dog.name)
+    setTopOverflowDelegate({ onDelete: () => void remove() })
+  })
+
   const whatsAppOwnerHref = $derived.by(() => {
     const o = selectedOwner
     if (!o?.phone) return ''
@@ -128,17 +157,8 @@
   {#if mode === 'edit' && dogId != null && !loaded}
     <p class="empty-hint">Loading…</p>
   {:else if mode === 'edit' && dogId != null && loaded && dog === undefined}
-    <header class="page-head">
-      <a href="#/dogs" class="back">← Dogs</a>
-      <h1>Dog not found</h1>
-    </header>
     <p class="empty-hint">This dog may have been removed.</p>
   {:else}
-    <header class="page-head">
-      <a href="#/dogs" class="back">← Dogs</a>
-      <h1>{mode === 'new' ? 'New dog' : dog?.name ?? 'Dog'}</h1>
-    </header>
-
     {#if mode === 'edit' && dog?.id != null}
       <p class="meta">
         Owner:
@@ -194,9 +214,6 @@
         <button type="submit" class="primary" disabled={saving}>
           {mode === 'new' ? 'Add dog' : 'Save changes'}
         </button>
-        {#if mode === 'edit'}
-          <button type="button" class="danger" onclick={() => void remove()}>Delete</button>
-        {/if}
       </div>
     </form>
   {/if}
@@ -207,18 +224,6 @@
     padding: 0 0 1rem;
     max-width: 560px;
     margin: 0 auto;
-  }
-  .page-head .back {
-    display: inline-block;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-primary);
-    text-decoration: none;
-    margin-bottom: 0.35rem;
-  }
-  .page-head h1 {
-    margin: 0;
-    font-size: 1.35rem;
   }
   .meta {
     margin: 0 0 1rem;

@@ -12,12 +12,17 @@
   --color-primary-highlight: rgba(26, 95, 74, 0.08);
   --color-danger: #b42318;
   --color-danger-contrast: #fff;
-  --shadow-tabbar: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-tabbar: 0 8px 32px rgba(0, 0, 0, 0.12);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  /* Matches App.svelte tabbar: 0.5rem + 48px + 0.5rem + safe-bottom */
-  --tabbar-h: calc(1rem + 48px + var(--safe-bottom));
-  --main-h: calc(100dvh - var(--tabbar-h));
+  /* Fixed app header: safe area + inner bar (~48px) + vertical padding */
+  --app-top-h: calc(var(--safe-top) + 3.35rem);
+  /* Floating tab bar inset from bottom (matches App.svelte) */
+  --tabbar-float-gap: 0.65rem;
+  --tabbar-float-h: calc(0.85rem + 48px);
+  --content-bottom-inset: calc(var(--tabbar-float-gap) + var(--tabbar-float-h) + var(--safe-bottom));
+  /* Legacy: calendar shell height inside scroll area below top chrome */
+  --main-h: calc(100dvh - var(--app-top-h) - var(--content-bottom-inset));
   font-family:
     system-ui,
     -apple-system,
@@ -43,7 +48,7 @@
     --color-primary-highlight: rgba(79, 196, 160, 0.14);
     --color-danger: #dc2626;
     --color-danger-contrast: #fff;
-    --shadow-tabbar: 0 -4px 24px rgba(0, 0, 0, 0.5);
+    --shadow-tabbar: 0 12px 40px rgba(0, 0, 0, 0.45);
   }
 }
 
