@@ -59,7 +59,7 @@ When the user has just authenticated and sync is enabled:
    - Download and parse JSON.
    - Validate `schemaVersion` and required arrays.
    - If **local IndexedDB is empty** (no owners, dogs, or appointments): **import** the remote snapshot into Dexie (see Import behavior), then set **last-known remote revision**; continue to ongoing export rules. **Do not** show the choice UI.
-   - If **local data exists** and **remote data exists**: show the **“Choose what to keep”** UI (see below). **Do not** import, overwrite, or merge until the user confirms.
+   - If **local data exists** and **remote data exists**: show the **“Choose what to keep”** UI (see below) with **merge (keep both)** as the **default** selection. **Do not** import, overwrite, or merge until the user confirms (e.g. primary **Continue**).
 3. **If the file does not exist**
    - **Export** current local database into the sync file (create parent folders if needed).
    - Store the returned remote revision as **last known**.
@@ -91,11 +91,13 @@ Present a **multi-select** (e.g. two options, both can be selected) whose meanin
 
 The UI must make the three outcomes and their consequences explicit (especially overwrite vs discard).
 
-**No silent choice:** never auto-pick local vs remote when both sides have data at bootstrap; always require confirmation through this UI (or a single explicit confirmation button per outcome—implementation may use radio cards instead of checkboxes as long as all three outcomes are available).
+**Default:** **Local + remote** (merge, keep both) must be **pre-selected** when the screen opens so the user can confirm with one action unless they change the selection.
 
-## Merge behavior (user-selected “both”)
+**Confirmation:** do not run import, overwrite, or merge **without** an explicit confirm (button). The default pre-selection is not an automatic merge on its own.
 
-When the user selects **local + remote**:
+## Merge behavior (default / “both”)
+
+When the user confirms **local + remote** (including the default path):
 
 - Produce one combined Dexie state that preserves **referential integrity** (`primaryOwnerId`, `dogId`, etc.).
 - **ID collisions** between the two snapshots must be resolved by **reassigning** imported numeric IDs and rewriting FKs on the merged-in rows so no orphan or duplicate-key rows remain.
@@ -153,7 +155,7 @@ After a successful merge, **export** the merged snapshot and store **last-known 
 
 - User can connect Dropbox, see success/failure clearly.
 - If sync file **exists** and **local DB is empty**, app imports without extra prompts.
-- If sync file **exists** and **local DB has data**, app shows **“Choose what to keep”** with owner and dog counts (and preferably appointment counts) for this device and Dropbox, and supports **remote only**, **local only**, and **merge both**.
+- If sync file **exists** and **local DB has data**, app shows **“Choose what to keep”** with owner and dog counts (and preferably appointment counts) for this device and Dropbox, **merge (keep both) pre-selected by default**, and supports **remote only**, **local only**, and **merge both** after explicit confirmation.
 - If sync file **missing**, app creates it from local data.
 - Local changes eventually **upload** the sync file when online; upload conflicts **never** silently overwrite Dropbox without user acknowledgment.
 
