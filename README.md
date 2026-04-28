@@ -1,47 +1,42 @@
-# Svelte + TS + Vite
+# Dog Grooming CMS
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+A lightweight **browser-based CMS for dog grooming salons**. It keeps owners, dogs, and grooming appointments in one place with a calendar-first workflow. Data stays **on the device** (IndexedDB via Dexie), so there is no backend to deploy for everyday use—the app is suitable as a demo or an offline-capable internal tool.
 
-## Recommended IDE Setup
+## What you get
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+- **Owners** — contact details for clients who book grooming for their dogs  
+- **Dogs** — profiles linked to an owner, with notes for special care  
+- **Calendar** — schedule appointments, move them, and line up services (bath, cut, nail trim, accessories)  
+- **PWA** — installable; works well on phones and tablets for front-desk use  
 
-## Need an official Svelte framework?
+Pushes to `main` (or `master`) build and deploy the static site to **GitHub Pages** (see `.github/workflows/github-pages.yml`).
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+## Tech stack
 
-## Technical considerations
+- [Svelte 5](https://svelte.dev/) + [TypeScript](https://www.typescriptlang.org/)  
+- [Vite](https://vite.dev/) for dev server and production build  
+- [Dexie](https://dexie.org/) / IndexedDB for local persistence  
+- [Event Calendar](https://github.com/vkurko/calendar) for the scheduling UI  
+- [Vite PWA](https://vite-pwa-org.netlify.app/) for the service worker and web app manifest  
 
-**Why use this over SvelteKit?**
+## Development
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+**Requirements:** Node `>=20.19.0` or `>=22.12.0`, [Yarn 4](https://yarnpkg.com/) (Corepack).
 
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
-
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
-
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
-
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
-
-**Why include `.vscode/extensions.json`?**
-
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
-
-**Why enable `allowJs` in the TS template?**
-
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
+```bash
+corepack enable
+yarn install
+yarn dev
 ```
+
+Other scripts:
+
+- `yarn build` — production build to `dist/`  
+- `yarn preview` — serve the production build locally  
+- `yarn check` — Svelte and TypeScript checks  
+
+For GitHub Pages, the workflow sets `VITE_BASE_PATH` to the repository name path; local `yarn dev` uses the default Vite base.
+
+## Recommended IDE setup
+
+[VS Code](https://code.visualstudio.com/) + [Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode). The repo includes `.vscode/extensions.json` so the editor can suggest the Svelte extension when you open the project.
