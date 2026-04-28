@@ -58,14 +58,51 @@ When the user has just authenticated and sync is enabled:
 2. **If the file exists**
    - Download and parse JSON.
    - Validate `schemaVersion` and required arrays.
-   - **Conflict check:** compare remote revision with any **last-known revision** stored locally for this file (if any).
-     - If remote is **newer** than last known, or there is no local “last known,” proceed to import (see Import behavior).
-     - If remote is **older or same** as last known and local DB has changed since last export, implementation-defined whether to **skip import** or still merge; v1 recommendation: **prefer remote if strictly newer by revision**; if revisions equal, **prefer local** and trigger export (last-write-wins at snapshot level).
+   - If **local IndexedDB is empty** (no owners, dogs, or appointments): **import** the remote snapshot into Dexie (see Import behavior), then set **last-known remote revision**; continue to ongoing export rules. **Do not** show the choice UI.
+   - If **local data exists** and **remote data exists**: show the **“Choose what to keep”** UI (see below). **Do not** import, overwrite, or merge until the user confirms.
 3. **If the file does not exist**
    - **Export** current local database into the sync file (create parent folders if needed).
    - Store the returned remote revision as **last known**.
 
-User-visible outcome: after bootstrap, local data and Dropbox either **match** an imported snapshot or **initial snapshot** was uploaded.
+User-visible outcome: after bootstrap, local data and Dropbox either **match** an imported snapshot, **initial snapshot** was uploaded, or the user **explicitly chose** how to combine local and Dropbox (including a new device with seeded/demo local data vs an existing Dropbox file).
+
+### “Choose what to keep” (local vs Dropbox)
+
+Use this when **both** the sync file and the local database contain data—typical case: user installs the PWA on a **second device** while Dropbox already has a backup, and this device has **fresh local state** (including optional demo/seed data from first launch).
+
+**Summary rows (required copy)**
+
+For **this device** and for **Dropbox**, show at minimum:
+
+- **Owners:** count of owner records.
+- **Dogs:** count of dog records.
+
+Showing **appointments** count as well is recommended so the user understands calendar volume on each side.
+
+**Interaction**
+
+Present a **multi-select** (e.g. two options, both can be selected) whose meaning is **which source(s) to include** in the outcome:
+
+| User selection | Resulting behavior |
+|----------------|--------------------|
+| **Remote only** | Replace local Dexie data with the remote snapshot (Import behavior). Then upload is consistent with “local = remote” unless the user edits again. Equivalent to “discard this device’s data and use Dropbox.” |
+| **Local only** | Keep current Dexie data; **do not** apply remote rows. **Upload** local snapshot to Dropbox (may **overwrite** the remote file—user must be warned). Equivalent to “ignore Dropbox and push this device.” |
+| **Local + remote** | **Merge** both datasets into Dexie (see Merge behavior), then **export** the combined snapshot to Dropbox so other devices see one combined file. |
+
+The UI must make the three outcomes and their consequences explicit (especially overwrite vs discard).
+
+**No silent choice:** never auto-pick local vs remote when both sides have data at bootstrap; always require confirmation through this UI (or a single explicit confirmation button per outcome—implementation may use radio cards instead of checkboxes as long as all three outcomes are available).
+
+## Merge behavior (user-selected “both”)
+
+When the user selects **local + remote**:
+
+- Produce one combined Dexie state that preserves **referential integrity** (`primaryOwnerId`, `dogId`, etc.).
+- **ID collisions** between the two snapshots must be resolved by **reassigning** imported numeric IDs and rewriting FKs on the merged-in rows so no orphan or duplicate-key rows remain.
+- **Row matching beyond IDs** (e.g. same person different IDs) is **not** required in v1; treat distinct IDs as distinct entities unless you add explicit deduping later.
+- Run the result in a **single logical transaction** where possible; on failure, keep the pre-merge local DB intact.
+
+After a successful merge, **export** the merged snapshot and store **last-known remote revision** from the upload response.
 
 ## Import behavior
 
@@ -84,13 +121,13 @@ User-visible outcome: after bootstrap, local data and Dropbox either **match** a
 
 ## Conflicts
 
-**Scenario:** Device A and Device B both change data; both try to export.
+**Scenario A (bootstrap / two full datasets):** covered by **“Choose what to keep”** and optional **merge** (see above)—not an automatic policy.
 
-- **Preferred v1 policy:** **Detect** conflict on upload (revision no longer matches). Do **not** auto-merge row-by-row in v1.
-- **User-facing behavior:**
-  - Notify user that **Dropbox has a newer version** than this device expected.
-  - Offer actions such as: **“Reload from Dropbox”** (discard local changes since last successful sync—implementation must define scope), **“Overwrite Dropbox with this device”** (force upload—destructive to other device’s pending work), or **“Export a copy”** (download-only backup file locally—optional nicety).
-- Exact button labels and whether “force overwrite” is allowed are product decisions; this spec requires **no silent loss** of data without explicit user choice.
+**Scenario B (ongoing):** Device A and Device B both change data; one device exports, then the other’s upload **fails** revision check.
+
+- **Policy:** **Detect** conflict on upload (revision no longer matches). Do **not** resolve by silently picking a side.
+- **User-facing behavior:** notify that **Dropbox was changed** since this device last synced. Offer actions such as: **“Reload from Dropbox”** (replace local with remote snapshot—same risk level as remote-only bootstrap), **“Overwrite Dropbox with this device”** (force upload—destructive to the other side’s pending work), or **“Export a copy”** (download-only backup locally—optional nicety). A **guided merge** similar to bootstrap is optional for this path in v1; minimum is reload vs overwrite with explicit warnings.
+- Exact button labels are product decisions; this spec requires **no silent loss** of data without explicit user choice.
 
 ## Offline and errors
 
@@ -107,16 +144,18 @@ User-visible outcome: after bootstrap, local data and Dropbox either **match** a
 ## Out of scope (v1)
 
 - Real-time multi-user collaboration (live cursors, simultaneous editors).
-- Automatic **merge** of conflicting row-level edits without user decision.
+- **Automatic** merge or automatic pick of local vs remote **without** the “Choose what to keep” step when both sides have data at bootstrap.
+- Fuzzy deduplication of owners/dogs across local and remote (same human or pet, different IDs).
 - Multiple named backups / scheduled history inside Dropbox (only the single sync file).
 - Non-Dropbox clouds (may be future specs).
 
 ## Acceptance criteria (summary)
 
 - User can connect Dropbox, see success/failure clearly.
-- If sync file **exists**, app imports into Dexie or handles conflict per policy.
+- If sync file **exists** and **local DB is empty**, app imports without extra prompts.
+- If sync file **exists** and **local DB has data**, app shows **“Choose what to keep”** with owner and dog counts (and preferably appointment counts) for this device and Dropbox, and supports **remote only**, **local only**, and **merge both**.
 - If sync file **missing**, app creates it from local data.
-- Local changes eventually **upload** the sync file when online; conflicts **never** silently overwrite another device’s newer upload without user acknowledgment.
+- Local changes eventually **upload** the sync file when online; upload conflicts **never** silently overwrite Dropbox without user acknowledgment.
 
 ## Related documents
 
