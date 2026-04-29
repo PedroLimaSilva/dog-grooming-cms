@@ -5,7 +5,7 @@
   import { onMount, tick } from 'svelte'
   import AppointmentFormModal from '../components/AppointmentFormModal.svelte'
   import MoveAppointmentSheet from '../components/MoveAppointmentSheet.svelte'
-  import type { AppointmentRecord, DogRecord, OwnerRecord } from '../db'
+  import type { AppointmentRecord, DogRecord } from '../db'
   import { db, updateAppointmentTimes } from '../db'
   import { resetTopNav, setTopNav } from '../lib/topNav'
 
@@ -34,7 +34,6 @@
   const calendar = (): Cal | undefined => calendarInst as Cal | undefined
   let appointments = $state<AppointmentRecord[]>([])
   let dogs = $state<DogRecord[]>([])
-  let owners = $state<OwnerRecord[]>([])
 
   let createOpen = $state(false)
   let createStart = $state(new Date())
@@ -57,25 +56,15 @@
         dogs = v
       },
     })
-    const s3 = liveQuery(() => db.owners.toArray()).subscribe({
-      next: (v) => {
-        owners = v
-      },
-    })
     return () => {
       s1.unsubscribe()
       s2.unsubscribe()
-      s3.unsubscribe()
     }
   })
 
   onMount(() => {
     return () => resetTopNav()
   })
-
-  function ownerById(id: number | undefined) {
-    return owners.find((o) => o.id === id)
-  }
 
   function dogById(id: number) {
     return dogs.find((d) => d.id === id)
@@ -86,10 +75,7 @@
       .filter((a) => a.id != null)
       .map((a) => {
         const dog = dogById(a.dogId)
-        const owner = dog ? ownerById(dog.primaryOwnerId) : undefined
-        const title = dog
-          ? `${dog.name}${owner ? ` · ${owner.phone}` : ''}`
-          : `Dog #${a.dogId}`
+        const title = dog ? dog.name : `Dog #${a.dogId}`
         return {
           id: String(a.id),
           title,
