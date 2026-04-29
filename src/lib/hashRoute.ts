@@ -2,10 +2,12 @@ export type AppRoute =
   | { name: 'calendar' }
   | { name: 'dogs'; segment: 'list' | 'new' | { id: number } }
   | { name: 'owners'; segment: 'list' | 'new' | { id: number } }
+  | { name: 'settings' }
 
-export type MainTab = 'calendar' | 'dogs' | 'owners'
+export type MainTab = 'calendar' | 'dogs' | 'owners' | 'settings'
 
 export function tabFromRoute(r: AppRoute): MainTab {
+  if (r.name === 'settings') return 'settings'
   if (r.name === 'calendar') return 'calendar'
   if (r.name === 'dogs') return 'dogs'
   return 'owners'
@@ -35,6 +37,10 @@ export function parseHash(hash: string): AppRoute {
     return { name: 'owners', segment: 'list' }
   }
 
+  if (parts[0] === 'settings') {
+    return { name: 'settings' }
+  }
+
   return { name: 'calendar' }
 }
 
@@ -50,6 +56,8 @@ export function formatRoute(r: AppRoute): string {
       if (r.segment === 'list') return '#/owners'
       if (r.segment === 'new') return '#/owners/new'
       return `#/owners/${r.segment.id}`
+    case 'settings':
+      return '#/settings'
   }
 }
 

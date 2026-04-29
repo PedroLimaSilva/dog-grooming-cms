@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CalendarDays, Check, ChevronLeft, ChevronRight, Dog, Menu, Plus, Users } from '@lucide/svelte'
+  import { CalendarDays, Check, ChevronLeft, ChevronRight, Dog, Menu, Plus, Settings, Users } from '@lucide/svelte'
   import { onMount } from 'svelte'
   import { seedIfEmpty } from './db'
   import { formatRoute, readRouteFromLocation, tabFromRoute, type AppRoute } from './lib/hashRoute'
@@ -9,6 +9,7 @@
   import DogsListView from './views/DogsListView.svelte'
   import OwnerDetailView from './views/OwnerDetailView.svelte'
   import OwnersListView from './views/OwnersListView.svelte'
+  import SettingsView from './views/SettingsView.svelte'
 
   let route = $state<AppRoute>(readRouteFromLocation())
   let overflowOpen = $state(false)
@@ -22,14 +23,16 @@
     return () => window.removeEventListener('hashchange', onHash)
   })
 
-  function go(tab: 'calendar' | 'dogs' | 'owners') {
+  function go(tab: 'calendar' | 'dogs' | 'owners' | 'settings') {
     overflowOpen = false
     if (tab === 'calendar') window.location.hash = formatRoute({ name: 'calendar' })
     if (tab === 'dogs') window.location.hash = formatRoute({ name: 'dogs', segment: 'list' })
     if (tab === 'owners') window.location.hash = formatRoute({ name: 'owners', segment: 'list' })
+    if (tab === 'settings') window.location.hash = formatRoute({ name: 'settings' })
   }
 
   const topTitle = $derived.by(() => {
+    if (route.name === 'settings') return 'Settings'
     if ($topNavConfig.title) return $topNavConfig.title
     if (route.name === 'calendar') return 'Calendar'
     if (route.name === 'dogs') {
@@ -171,6 +174,8 @@
   <main class="main">
     {#if route.name === 'calendar'}
       <CalendarView />
+    {:else if route.name === 'settings'}
+      <SettingsView />
     {:else if route.name === 'dogs'}
       {#if route.segment === 'list'}
         <DogsListView />
@@ -204,6 +209,10 @@
     <button type="button" class:active={tabFromRoute(route) === 'owners'} onclick={() => go('owners')}>
       <Users size={20} strokeWidth={2.2} aria-hidden="true" />
       <span>Owners</span>
+    </button>
+    <button type="button" class:active={tabFromRoute(route) === 'settings'} onclick={() => go('settings')}>
+      <Settings size={20} strokeWidth={2.2} aria-hidden="true" />
+      <span>Settings</span>
     </button>
   </nav>
 </div>
@@ -355,7 +364,7 @@
     right: 0;
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.35rem;
     padding: 0.5rem 0.75rem calc(0.5rem + var(--safe-bottom));
     background: color-mix(in srgb, var(--color-surface) 90%, transparent);

@@ -17,7 +17,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   /* Matches App.svelte topbar: safe-top + 44px button + vertical padding */
   --topbar-h: calc(var(--safe-top) + 60px);
-  /* Matches App.svelte tabbar: 0.5rem + 48px + 0.5rem + safe-bottom */
+  /* Matches App.svelte tabbar: 0.5rem + 52px row + 0.5rem + safe-bottom */
   --tabbar-h: calc(1rem + 52px + var(--safe-bottom));
   --main-h: calc(100dvh - var(--topbar-h) - var(--tabbar-h));
   font-family:
