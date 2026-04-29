@@ -48,7 +48,7 @@
 
 <style>
   .panel {
-    padding: 0 0 1rem;
+    padding: 0.75rem;
     max-width: 560px;
     margin: 0 auto;
   }
