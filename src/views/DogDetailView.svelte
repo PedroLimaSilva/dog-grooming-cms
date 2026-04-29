@@ -1,8 +1,9 @@
 <script lang="ts">
   import { liveQuery } from 'dexie'
   import { onMount } from 'svelte'
+  import CreateSelectField from '../components/CreateSelectField.svelte'
   import type { DogRecord, OwnerRecord } from '../db'
-  import { db, deleteDog, upsertDog } from '../db'
+  import { createQuickOwner, db, deleteDog, upsertDog } from '../db'
   import { navigateTo } from '../lib/hashRoute'
   import { resetTopNav, setTopNav, type OverflowAction } from '../lib/topNav'
   import { phoneDigitsForWhatsApp, whatsAppChatUrl } from '../lib/whatsapp'
@@ -51,10 +52,10 @@
   $effect(() => {
     if (mode !== 'edit' || !dog) return
     name = dog.name
-    breed = dog.breed
+    breed = dog.breed ?? ''
     dateOfBirth = dog.dateOfBirth ?? ''
     specialCareNotes = dog.specialCareNotes ?? ''
-    primaryOwnerId = dog.primaryOwnerId
+    primaryOwnerId = dog.primaryOwnerId ?? ''
   })
 
   $effect(() => {
@@ -71,7 +72,7 @@
       return
     }
     if (primaryOwnerId === '') {
-      err = 'Choose an owner (add one under Owners if missing).'
+      err = 'Choose or add an owner.'
       return
     }
     saving = true
@@ -158,7 +159,7 @@
     <h2>Dog not found</h2>
     <p class="empty-hint">This dog may have been removed.</p>
   {:else}
-    {#if mode === 'edit' && dog?.id != null}
+    {#if mode === 'edit' && dog?.id != null && dog.primaryOwnerId != null}
       <p class="meta">
         Owner:
         <a class="inline-link" href="#/owners/{dog.primaryOwnerId}">{ownerLabel(dog.primaryOwnerId)}</a>
@@ -192,15 +193,18 @@
         <textarea id="dnotes" rows="3" bind:value={specialCareNotes} placeholder="Allergies, behavior, vet notes…"></textarea>
       </div>
       <div class="field">
-        <label for="downer">Owner</label>
-        <select id="downer" bind:value={primaryOwnerId}>
-          <option value="">Select…</option>
-          {#each owners as o (o.id)}
-            {#if o.id != null}
-              <option value={o.id}>{o.name} — {o.phone}</option>
-            {/if}
-          {/each}
-        </select>
+        <CreateSelectField
+          id="downer"
+          label="Owner"
+          items={owners}
+          bind:selectedId={primaryOwnerId}
+          placeholder="Search or add owner"
+          createLabel="Add owner"
+          emptyLabel="No owners yet."
+          getLabel={(owner) => owner.name}
+          getDetail={(owner) => owner.phone || 'No phone yet'}
+          oncreate={createQuickOwner}
+        />
       </div>
       {#if err}<p class="error-text">{err}</p>{/if}
     </form>

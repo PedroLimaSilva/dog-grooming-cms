@@ -1,7 +1,8 @@
 <script lang="ts">
+  import CreateSelectField from './CreateSelectField.svelte'
   import type { DogRecord } from '../db'
   import type { GroomingServiceLine } from '../types'
-  import { createAppointment } from '../db'
+  import { createAppointment, createQuickDog } from '../db'
 
   type Props = {
     open: boolean
@@ -51,6 +52,10 @@
     if (nail) out.push({ kind: 'nail_trim' })
     if (accessory) out.push({ kind: 'accessory_purchase', accessoryNote: accessoryNote || undefined })
     return out.length ? out : [{ kind: 'bath' }]
+  }
+
+  async function createDog(name: string): Promise<number> {
+    return createQuickDog(name)
   }
 
   async function save() {
@@ -113,15 +118,18 @@
       </div>
 
       <div class="field">
-        <label for="dog">Dog</label>
-        <select id="dog" bind:value={dogId}>
-          <option value="">Select…</option>
-          {#each dogs as d (d.id)}
-            {#if d.id != null}
-              <option value={d.id}>{d.name} ({d.breed})</option>
-            {/if}
-          {/each}
-        </select>
+        <CreateSelectField
+          id="dog"
+          label="Dog"
+          items={dogs}
+          bind:selectedId={dogId}
+          placeholder="Search or add dog"
+          createLabel="Add dog"
+          emptyLabel="No dogs found."
+          getLabel={(d) => d.name}
+          getDetail={(d) => d.breed || 'Details can be added later'}
+          oncreate={createDog}
+        />
       </div>
 
       <fieldset>
