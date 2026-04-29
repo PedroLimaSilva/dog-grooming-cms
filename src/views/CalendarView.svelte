@@ -220,12 +220,27 @@
     }
   }
 
+  function updateMonthListDate(date: Date) {
+    const month = startOfMonth(date)
+    calendarDate = month
+    relevantMonthKey = monthKey(month)
+    topTitle = monthListTitle(month)
+  }
+
+  function moveCalendar(direction: -1 | 1) {
+    if (viewMode === 'monthList') {
+      updateMonthListDate(addMonths(calendarDate, direction))
+    } else {
+      direction < 0 ? calendar()?.prev() : calendar()?.next()
+      queueHeaderFormatting()
+    }
+  }
+
   function goToday() {
     const today = new Date()
     calendarDate = today
     if (viewMode === 'monthList') {
-      relevantMonthKey = monthKey(today)
-      topTitle = monthListTitle(today)
+      updateMonthListDate(today)
     } else {
       calendar()?.setOption('date', today)
       calendar()?.setOption('scrollTime', currentScrollTime())
@@ -315,10 +330,11 @@
   $effect(() => {
     setTopNav({
       title: topTitle,
-      action: {
-        label: 'Today',
-        onclick: goToday,
-      },
+      actions: [
+        { label: 'Previous', ariaLabel: 'Previous period', icon: 'chevron-left', onclick: () => moveCalendar(-1) },
+        { label: 'Today', variant: 'label', onclick: goToday },
+        { label: 'Next', ariaLabel: 'Next period', icon: 'chevron-right', onclick: () => moveCalendar(1) },
+      ],
       overflow: [
         { label: 'Day', onclick: () => updateViewMode('timeGridDay') },
         { label: 'Week', onclick: () => updateViewMode('timeGridWeek') },
