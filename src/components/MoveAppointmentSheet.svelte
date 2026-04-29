@@ -144,7 +144,6 @@
       onkeydown={(e) => e.stopPropagation()}
     >
       <h2 id="move-title">Appointment</h2>
-      <p class="hint">Change times here if drag is awkward on your device.</p>
 
       <div class="field">
         <label for="mdog">Dog</label>
@@ -206,11 +205,6 @@
 {/if}
 
 <style>
-  .hint {
-    margin: 0 0 1rem;
-    color: var(--color-muted);
-    font-size: 0.875rem;
-  }
   .end-preview {
     margin: 0.4rem 0 0;
     font-size: 0.875rem;

@@ -26,7 +26,6 @@
 </script>
 
 <div class="panel">
-  <p class="hint">Primary contacts. Tap an owner for details.</p>
 
   <SearchField bind:value={searchQuery} placeholder="Search owners" label="Search owners" />
 
@@ -51,11 +50,6 @@
     padding: 0.75rem;
     max-width: 560px;
     margin: 0 auto;
-  }
-  .hint {
-    margin: 0 0 1rem;
-    color: var(--color-muted);
-    font-size: 0.9rem;
   }
   .list-card-link {
     display: block;
