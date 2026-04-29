@@ -391,6 +391,9 @@
     color: var(--color-primary);
     font-weight: 700;
   }
+  :global(.ec-shell .ec-toolbar) {
+    display: none;
+  }
   .month-list {
     height: 100%;
     overflow: auto;
