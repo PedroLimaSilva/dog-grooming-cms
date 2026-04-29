@@ -2,7 +2,7 @@
 export type Owner = {
   id?: number
   name: string
-  phone: string
+  phone?: string
   email?: string
 }
 
@@ -10,11 +10,11 @@ export type Owner = {
 export type Dog = {
   id?: number
   name: string
-  breed: string
+  breed?: string
   /** Calendar date in local time, `YYYY-MM-DD` */
   dateOfBirth?: string
   specialCareNotes?: string
-  primaryOwnerId: number
+  primaryOwnerId?: number
 }
 
 export type GroomingServiceKind = 'bath' | 'cut' | 'nail_trim' | 'accessory_purchase'

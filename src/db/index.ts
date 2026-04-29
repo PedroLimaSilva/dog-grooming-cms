@@ -99,6 +99,14 @@ export async function upsertDog(row: DogRecord): Promise<number> {
   })) as number
 }
 
+export async function createQuickOwner(name: string): Promise<number> {
+  return upsertOwner({ name: name.trim(), phone: '' })
+}
+
+export async function createQuickDog(name: string): Promise<number> {
+  return upsertDog({ name: name.trim() })
+}
+
 export async function deleteOwner(id: number): Promise<void> {
   const linked = await db.dogs.where('primaryOwnerId').equals(id).count()
   if (linked > 0) {

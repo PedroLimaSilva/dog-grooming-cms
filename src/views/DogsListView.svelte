@@ -26,7 +26,8 @@
     }
   })
 
-  function ownerLabel(id: number) {
+  function ownerLabel(id: number | undefined) {
+    if (id == null) return 'No owner'
     const o = owners.find((x) => x.id === id)
     return o ? o.name : `#${id}`
   }
@@ -62,7 +63,7 @@
         <a class="list-card list-card-link" href="#/dogs/{d.id}">
           <h2>{d.name}</h2>
           <p>
-            {d.breed} · {ownerLabel(d.primaryOwnerId)}
+            {d.breed || 'Breed not set'} · {ownerLabel(d.primaryOwnerId)}
             {#if d.dateOfBirth}
               · born {d.dateOfBirth}
             {/if}

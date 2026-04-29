@@ -50,7 +50,7 @@
   $effect(() => {
     if (mode !== 'edit' || !owner) return
     name = owner.name
-    phone = owner.phone
+    phone = owner.phone ?? ''
   })
 
   async function save() {
