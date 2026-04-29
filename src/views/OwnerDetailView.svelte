@@ -4,6 +4,8 @@
   import type { DogRecord, OwnerRecord } from '../db'
   import { db, deleteOwner, upsertOwner } from '../db'
   import { navigateTo } from '../lib/hashRoute'
+  import { resetTopNav, setTopNav, type OverflowAction } from '../lib/topNav'
+  import { phoneDigitsForWhatsApp, whatsAppChatUrl } from '../lib/whatsapp'
 
   type Props = { mode: 'new' | 'edit'; ownerId?: number }
 
@@ -84,6 +86,45 @@
       err = e instanceof Error ? e.message : 'Could not delete.'
     }
   }
+
+  const whatsAppOwnerHref = $derived.by(() => {
+    if (!phoneDigitsForWhatsApp(phone)) return ''
+    return whatsAppChatUrl(phone, `Hi ${name.trim() || 'there'}, `)
+  })
+
+  $effect(() => {
+    const overflow: OverflowAction[] =
+      mode === 'edit'
+        ? [
+            ...(whatsAppOwnerHref
+              ? [
+                  {
+                    label: 'Message owner',
+                    href: whatsAppOwnerHref,
+                    external: true,
+                  },
+                ]
+              : []),
+            {
+              label: 'Add dog',
+              href: '#/dogs/new',
+            },
+            {
+              label: 'Delete owner',
+              onclick: () => void remove(),
+              danger: true,
+            },
+          ]
+        : []
+
+    setTopNav({
+      title: mode === 'new' ? 'New owner' : owner?.name || name.trim() || 'Owner',
+      onSave: () => void save(),
+      saving,
+      overflow,
+    })
+    return resetTopNav
+  })
 </script>
 
 <div class="panel">
@@ -107,14 +148,6 @@
         <input id="ophone" bind:value={phone} type="tel" autocomplete="tel" />
       </div>
       {#if err}<p class="error-text">{err}</p>{/if}
-      <div class="row-actions">
-        <button type="submit" class="primary" disabled={saving}>
-          {mode === 'new' ? 'Add owner' : 'Save changes'}
-        </button>
-        {#if mode === 'edit'}
-          <button type="button" class="danger" onclick={() => void remove()}>Delete</button>
-        {/if}
-      </div>
     </form>
 
     {#if mode === 'edit' && owner?.id != null}
@@ -131,9 +164,6 @@
           {/if}
         {/each}
       {/if}
-      <p class="row-actions">
-        <a href="#/dogs/new" class="secondary-link">Add dog (pick this owner in the form)</a>
-      </p>
     {/if}
   {/if}
 </div>
@@ -161,10 +191,5 @@
   }
   .subtle {
     padding-top: 0;
-  }
-  .secondary-link {
-    font-size: 0.875rem;
-    color: var(--color-primary);
-    font-weight: 600;
   }
 </style>
