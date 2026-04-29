@@ -94,6 +94,16 @@
           <ChevronLeft size={20} strokeWidth={2.4} aria-hidden="true" />
         </a>
       {/if}
+      {#if showAction}
+        <button
+          type="button"
+          class="nav-button nav-button-label"
+          aria-label={$topNavConfig.action?.label}
+          onclick={() => $topNavConfig.action?.onclick()}
+        >
+          {$topNavConfig.action?.label}
+        </button>
+      {/if}
     </div>
 
     <h1>{topTitle}</h1>
@@ -104,16 +114,6 @@
           <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
           <span>{createLabel}</span>
         </a>
-      {/if}
-      {#if showAction}
-        <button
-          type="button"
-          class="nav-button nav-button-label"
-          aria-label={$topNavConfig.action?.label}
-          onclick={() => $topNavConfig.action?.onclick()}
-        >
-          {$topNavConfig.action?.label}
-        </button>
       {/if}
       {#if showOverflow}
         <div class="overflow">

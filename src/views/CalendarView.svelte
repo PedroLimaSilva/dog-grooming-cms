@@ -250,6 +250,7 @@
     slotMinTime: '07:00:00',
     slotMaxTime: '24:00:00',
     scrollTime: '09:00:00',
+    slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
     allDaySlot: false,
     nowIndicator: true,
     headerToolbar: { start: '', center: '', end: '' },
@@ -393,6 +394,10 @@
   }
   :global(.ec-shell .ec-toolbar) {
     display: none;
+  }
+  :global(.ec-shell .ec-time-grid .ec-sidebar) {
+    padding-inline: 0.3rem;
+    font-size: 0.72rem;
   }
   .month-list {
     height: 100%;
