@@ -2,7 +2,7 @@
   import { Calendar, DayGrid, Interaction, TimeGrid } from '@event-calendar/core'
   import '@event-calendar/core/index.css'
   import { liveQuery } from 'dexie'
-  import { onMount } from 'svelte'
+  import { onMount, tick } from 'svelte'
   import AppointmentFormModal from '../components/AppointmentFormModal.svelte'
   import MoveAppointmentSheet from '../components/MoveAppointmentSheet.svelte'
   import type { AppointmentRecord, DogRecord, OwnerRecord } from '../db'
@@ -189,11 +189,37 @@
     return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(date)
   }
 
+  function weekdayLetter(date: Date) {
+    return new Intl.DateTimeFormat(undefined, { weekday: 'narrow' }).format(date)
+  }
+
+  function formatTimeGridHeaders() {
+    if (typeof document === 'undefined') return
+    const headers = document.querySelectorAll<HTMLTimeElement>('.ec-time-grid .ec-header .ec-col-head time')
+    headers.forEach((header) => {
+      const date = new Date(`${header.dateTime}T00:00:00`)
+      if (Number.isNaN(date.getTime())) return
+      header.replaceChildren()
+      const weekday = document.createElement('span')
+      weekday.className = 'calendar-day-weekday'
+      weekday.textContent = weekdayLetter(date)
+      const day = document.createElement('span')
+      day.className = 'calendar-day-number'
+      day.textContent = String(date.getDate())
+      header.append(weekday, day)
+    })
+  }
+
+  function queueHeaderFormatting() {
+    void tick().then(() => requestAnimationFrame(formatTimeGridHeaders))
+  }
+
   function updateViewMode(mode: CalendarViewMode) {
     viewMode = mode
     if (mode !== 'monthList') {
       calendar()?.setOption('view', mode)
       calendar()?.setOption('date', calendarDate)
+      queueHeaderFormatting()
     } else {
       const relevant = chooseRelevantMonth()
       calendarDate = relevant
@@ -211,6 +237,7 @@
     } else {
       calendar()?.setOption('date', today)
       calendar()?.setOption('scrollTime', currentScrollTime())
+      queueHeaderFormatting()
     }
   }
 
@@ -228,6 +255,7 @@
     } else if (info.view.type === 'timeGridDay') {
       topTitle = monthTitle(info.start)
     }
+    queueHeaderFormatting()
   }
 
   function openAppointment(id: string) {
@@ -254,6 +282,7 @@
     allDaySlot: false,
     nowIndicator: true,
     headerToolbar: { start: '', center: '', end: '' },
+    dayHeaderFormat: { weekday: 'narrow', day: 'numeric' },
     titleFormat: { month: 'long' },
     datesSet,
     select: (info: { start: Date; end: Date | null }) => {
@@ -398,6 +427,22 @@
   :global(.ec-shell .ec-time-grid .ec-sidebar) {
     padding-inline: 0.3rem;
     font-size: 0.72rem;
+  }
+  :global(.ec-shell .ec-time-grid .ec-header .ec-col-head time) {
+    display: grid;
+    gap: 0.1rem;
+    justify-items: center;
+    line-height: 1.05;
+  }
+  :global(.ec-shell .ec-time-grid .calendar-day-weekday) {
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  :global(.ec-shell .ec-time-grid .calendar-day-number) {
+    font-size: 1rem;
+  }
+  :global(.ec-shell .ec-time-grid .ec-event-time) {
+    display: none;
   }
   .month-list {
     height: 100%;
