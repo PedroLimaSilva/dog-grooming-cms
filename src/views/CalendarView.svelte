@@ -26,8 +26,10 @@
   type MonthSection = {
     key: string
     label: string
-    days: Date[]
+    days: Array<Date | null>
   }
+
+  const monthWeekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   /** Event Calendar instance; typed loosely because the package has no TS exports. */
   let calendarInst = $state<unknown>()
@@ -144,14 +146,15 @@
 
     for (let cursor = start; cursor <= end; cursor = addMonths(cursor, 1)) {
       const firstDay = new Date(cursor)
-      const days = Array.from(
+      const leadingDays = Array.from<Date | null>({ length: firstDay.getDay() }).fill(null)
+      const monthDays = Array.from(
         { length: new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0).getDate() },
         (_, i) => new Date(firstDay.getFullYear(), firstDay.getMonth(), i + 1),
       )
       sections.push({
         key: monthKey(firstDay),
-        label: new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(firstDay),
-        days,
+        label: monthTitle(firstDay),
+        days: [...leadingDays, ...monthDays],
       })
     }
 
@@ -349,22 +352,29 @@
       {#each monthSections as month (month.key)}
         <section class="month-section" data-month={month.key}>
           <h2>{month.label}</h2>
-          <div class="month-days">
-            {#each month.days as day (day.toDateString())}
-              {@const dayAppointments = appointmentsForDay(day)}
-              <article class="month-day" class:today={sameMonth(day, new Date()) && day.getDate() === new Date().getDate()}>
-                <div class="month-day-number">{day.getDate()}</div>
-                <div class="month-day-content">
-                  {#if dayAppointments.length > 0}
-                    {#each dayAppointments as appointment (appointment.id)}
-                      <button type="button" class="month-event" onclick={() => openAppointment(appointment.id)}>
-                        <span>{formattedTime(appointment.start)}</span>
-                        {appointment.title}
-                      </button>
-                    {/each}
-                  {/if}
-                </div>
-              </article>
+          <div class="month-grid">
+            {#each monthWeekdays as label}
+              <div class="month-weekday">{label}</div>
+            {/each}
+            {#each month.days as day, index (day ? day.toDateString() : `placeholder-${month.key}-${index}`)}
+              {#if day}
+                {@const dayAppointments = appointmentsForDay(day)}
+                <article class="month-day" class:today={sameMonth(day, new Date()) && day.getDate() === new Date().getDate()}>
+                  <div class="month-day-number">{day.getDate()}</div>
+                  <div class="month-day-content">
+                    {#if dayAppointments.length > 0}
+                      {#each dayAppointments as appointment (appointment.id)}
+                        <button type="button" class="month-event" onclick={() => openAppointment(appointment.id)}>
+                          <span>{formattedTime(appointment.start)}</span>
+                          {appointment.title}
+                        </button>
+                      {/each}
+                    {/if}
+                  </div>
+                </article>
+              {:else}
+                <div class="month-day placeholder" aria-hidden="true"></div>
+              {/if}
             {/each}
           </div>
         </section>
@@ -451,7 +461,7 @@
     background: var(--color-bg);
     font-size: 1rem;
   }
-  .month-days {
+  .month-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     overflow: hidden;
@@ -459,12 +469,26 @@
     border-radius: 14px;
     background: var(--color-surface);
   }
+  .month-weekday {
+    min-height: 28px;
+    padding: 0.35rem 0.25rem;
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+  }
   .month-day {
     min-height: 78px;
     padding: 0.35rem;
     border-right: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
   }
+  .month-day.placeholder {
+    background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+  }
+  .month-weekday:nth-child(7n),
   .month-day:nth-child(7n) {
     border-right: 0;
   }
