@@ -4,6 +4,7 @@
   import type { DogRecord, OwnerRecord } from '../db'
   import { db, deleteDog, upsertDog } from '../db'
   import { navigateTo } from '../lib/hashRoute'
+  import { resetTopNav, setTopNav, type OverflowAction } from '../lib/topNav'
   import { phoneDigitsForWhatsApp, whatsAppChatUrl } from '../lib/whatsapp'
 
   type Props = { mode: 'new' | 'edit'; dogId?: number }
@@ -122,6 +123,32 @@
     const dogName = name.trim() || dog?.name || 'my dog'
     return whatsAppChatUrl(o.phone, `Hi, this is regarding ${dogName}. `)
   })
+
+  $effect(() => {
+    const title = mode === 'new' ? 'New dog' : dog?.name || name.trim() || 'Dog'
+    const overflow: OverflowAction[] = []
+    if (mode === 'edit') {
+      if (whatsAppOwnerHref) {
+        overflow.push({
+          label: 'Message owner',
+          href: whatsAppOwnerHref,
+          external: true,
+        })
+      }
+      overflow.push({
+        label: 'Delete',
+        onclick: () => void remove(),
+        danger: true,
+      })
+    }
+    setTopNav({
+      title,
+      onSave: () => void save(),
+      saving,
+      overflow,
+    })
+    return resetTopNav
+  })
 </script>
 
 <div class="panel">
@@ -138,13 +165,7 @@
       </p>
     {/if}
 
-    {#if whatsAppOwnerHref}
-      <p class="meta-actions">
-        <a class="whatsapp" href={whatsAppOwnerHref} target="_blank" rel="noopener noreferrer">
-          Message owner on WhatsApp
-        </a>
-      </p>
-    {:else if selectedOwner}
+    {#if mode === 'edit' && selectedOwner && !whatsAppOwnerHref}
       <p class="meta-hint">Add digits to the owner’s phone (country code) to open WhatsApp.</p>
     {/if}
 
@@ -182,14 +203,7 @@
         </select>
       </div>
       {#if err}<p class="error-text">{err}</p>{/if}
-      <div class="row-actions">
-        <button type="submit" class="primary" disabled={saving}>
-          {mode === 'new' ? 'Add dog' : 'Save changes'}
-        </button>
-        {#if mode === 'edit'}
-          <button type="button" class="danger" onclick={() => void remove()}>Delete</button>
-        {/if}
-      </div>
+      <button type="submit" class="visually-hidden-submit" disabled={saving}>Save</button>
     </form>
   {/if}
 </div>
@@ -213,30 +227,9 @@
     color: var(--color-primary);
     font-weight: 600;
   }
-  .meta-actions {
-    margin: 0 0 1rem;
-  }
   .meta-hint {
     margin: 0 0 1rem;
     font-size: 0.85rem;
     color: var(--color-muted);
-  }
-  .whatsapp {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    padding: 0.5rem 0.85rem;
-    border-radius: 10px;
-    border: 1px solid #128c7e;
-    background: #25d366;
-    color: #fff;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-decoration: none;
-  }
-  .whatsapp:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
   }
 </style>

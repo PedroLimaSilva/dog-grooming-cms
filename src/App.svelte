@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { CalendarDays, ChevronLeft, Dog, Menu, Plus, Users } from '@lucide/svelte'
+  import { CalendarDays, Check, ChevronLeft, Dog, Menu, Plus, Users } from '@lucide/svelte'
   import { onMount } from 'svelte'
   import { seedIfEmpty } from './db'
   import { formatRoute, readRouteFromLocation, tabFromRoute, type AppRoute } from './lib/hashRoute'
+  import { topNavConfig, type OverflowAction } from './lib/topNav'
   import CalendarView from './views/CalendarView.svelte'
   import DogDetailView from './views/DogDetailView.svelte'
   import DogsListView from './views/DogsListView.svelte'
@@ -10,6 +11,7 @@
   import OwnersListView from './views/OwnersListView.svelte'
 
   let route = $state<AppRoute>(readRouteFromLocation())
+  let overflowOpen = $state(false)
 
   onMount(() => {
     void seedIfEmpty()
@@ -21,6 +23,7 @@
   })
 
   function go(tab: 'calendar' | 'dogs' | 'owners') {
+    overflowOpen = false
     if (tab === 'calendar') window.location.hash = formatRoute({ name: 'calendar' })
     if (tab === 'dogs') window.location.hash = formatRoute({ name: 'dogs', segment: 'list' })
     if (tab === 'owners') window.location.hash = formatRoute({ name: 'owners', segment: 'list' })
@@ -28,6 +31,7 @@
 
   const topTitle = $derived.by(() => {
     if (route.name === 'calendar') return 'Calendar'
+    if ($topNavConfig.title) return $topNavConfig.title
     if (route.name === 'dogs') {
       if (route.segment === 'list') return 'Dogs'
       if (route.segment === 'new') return 'New dog'
@@ -49,7 +53,37 @@
     if (route.name === 'owners' && route.segment === 'list') return '#/owners/new'
     return ''
   })
+
+  const createLabel = $derived.by(() => {
+    if (route.name === 'dogs' && route.segment === 'list') return 'Dog'
+    if (route.name === 'owners' && route.segment === 'list') return 'Owner'
+    return ''
+  })
+
+  const showOverflow = $derived(($topNavConfig.overflow?.length ?? 0) > 0)
+  const showSave = $derived(typeof $topNavConfig.onSave === 'function')
+
+  function actionIsLink(action: OverflowAction): action is OverflowAction & { href: string } {
+    return typeof action.href === 'string' && action.href.length > 0
+  }
+
+  function runOverflowAction(action: OverflowAction) {
+    overflowOpen = false
+    action.onclick?.()
+  }
+
+  function closeOverflow() {
+    overflowOpen = false
+  }
+
+  function closeOverflowFromWindow(event: MouseEvent) {
+    const target = event.target
+    if (target instanceof Element && target.closest('.overflow')) return
+    closeOverflow()
+  }
 </script>
+
+<svelte:window onclick={closeOverflowFromWindow} />
 
 <div class="app-root">
   <header class="topbar">
@@ -58,38 +92,57 @@
         <a class="nav-button" href={backHref} aria-label="Go back">
           <ChevronLeft size={20} strokeWidth={2.4} aria-hidden="true" />
         </a>
-      {:else if createHref}
-        <a class="nav-button" href={createHref} aria-label="Create">
-          <Plus size={20} strokeWidth={2.5} aria-hidden="true" />
-        </a>
       {/if}
     </div>
 
     <h1>{topTitle}</h1>
 
     <div class="topbar-slot topbar-slot-right">
-      <details class="overflow">
-        <summary class="nav-button" aria-label="More options">
-          <Menu size={20} strokeWidth={2.4} aria-hidden="true" />
-        </summary>
-        <div class="overflow-panel">
-          {#if route.name !== 'calendar'}
-            <a href="#/calendar">Calendar</a>
-          {/if}
-          {#if route.name !== 'dogs' || route.segment !== 'list'}
-            <a href="#/dogs">Dogs</a>
-          {/if}
-          {#if route.name !== 'owners' || route.segment !== 'list'}
-            <a href="#/owners">Owners</a>
-          {/if}
-          {#if route.name !== 'dogs' || route.segment !== 'new'}
-            <a href="#/dogs/new">New dog</a>
-          {/if}
-          {#if route.name !== 'owners' || route.segment !== 'new'}
-            <a href="#/owners/new">New owner</a>
+      {#if createHref}
+        <a class="nav-button nav-button-primary nav-button-label" href={createHref} aria-label="Add {createLabel}">
+          <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
+          <span>{createLabel}</span>
+        </a>
+      {/if}
+      {#if showOverflow}
+        <div class="overflow">
+          <button
+            type="button"
+            class="nav-button"
+            aria-label="More options"
+            aria-expanded={overflowOpen}
+            onclick={() => (overflowOpen = !overflowOpen)}
+          >
+            <Menu size={20} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+          {#if overflowOpen}
+            <div class="overflow-panel">
+              {#each $topNavConfig.overflow ?? [] as action (action.label)}
+                {#if actionIsLink(action)}
+                  <a
+                    href={action.href}
+                    target={action.external ? '_blank' : undefined}
+                    rel={action.external ? 'noopener noreferrer' : undefined}
+                    class:danger={action.danger}
+                    onclick={closeOverflow}
+                  >
+                    {action.label}
+                  </a>
+                {:else}
+                  <button type="button" class:danger={action.danger} onclick={() => runOverflowAction(action)}>
+                    {action.label}
+                  </button>
+                {/if}
+              {/each}
+            </div>
           {/if}
         </div>
-      </details>
+      {/if}
+      {#if showSave}
+        <button type="button" class="nav-button nav-button-save" aria-label="Save" disabled={$topNavConfig.saving} onclick={() => $topNavConfig.onSave?.()}>
+          <Check size={20} strokeWidth={2.6} aria-hidden="true" />
+        </button>
+      {/if}
     </div>
   </header>
 
@@ -152,7 +205,7 @@
     right: 0;
     z-index: 45;
     display: grid;
-    grid-template-columns: minmax(72px, 1fr) auto minmax(72px, 1fr);
+    grid-template-columns: minmax(56px, 1fr) minmax(0, auto) minmax(56px, 1fr);
     align-items: center;
     gap: 0.5rem;
     height: var(--topbar-h);
@@ -166,6 +219,9 @@
     font-size: 1.15rem;
     line-height: 1;
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .topbar-slot {
     display: flex;
@@ -177,9 +233,9 @@
   }
   .topbar-slot-right {
     justify-content: flex-end;
+    gap: 0.4rem;
   }
-  .nav-button,
-  .overflow summary.nav-button {
+  .nav-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -194,15 +250,23 @@
     text-decoration: none;
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
   }
+  .nav-button-primary {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-primary-contrast);
+  }
+  .nav-button-label {
+    width: auto;
+    gap: 0.2rem;
+    padding: 0 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .nav-button-save {
+    color: var(--color-primary);
+  }
   .overflow {
     position: relative;
-  }
-  .overflow summary {
-    list-style: none;
-    cursor: pointer;
-  }
-  .overflow summary::-webkit-details-marker {
-    display: none;
   }
   .overflow-panel {
     position: absolute;
@@ -217,6 +281,7 @@
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
   }
   .overflow-panel a {
+    display: block;
     padding: 0.65rem 0.75rem;
     border-radius: 10px;
     color: var(--color-text);
@@ -224,10 +289,27 @@
     text-decoration: none;
     white-space: nowrap;
   }
+  .overflow-panel button {
+    min-height: 0;
+    min-width: 0;
+    padding: 0.65rem 0.75rem;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-text);
+    font-weight: 600;
+    text-align: left;
+  }
   .overflow-panel a:focus,
-  .overflow-panel a:hover {
+  .overflow-panel a:hover,
+  .overflow-panel button:focus,
+  .overflow-panel button:hover {
     background: var(--color-primary-soft-bg);
     color: var(--color-primary);
+  }
+  .overflow-panel a.danger,
+  .overflow-panel button.danger {
+    color: var(--color-danger);
   }
   .tabbar {
     position: fixed;
