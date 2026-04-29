@@ -211,7 +211,10 @@
   }
 
   function queueHeaderFormatting() {
-    void tick().then(() => requestAnimationFrame(formatTimeGridHeaders))
+    void tick().then(() => {
+      requestAnimationFrame(formatTimeGridHeaders)
+      window.setTimeout(formatTimeGridHeaders, 80)
+    })
   }
 
   function updateViewMode(mode: CalendarViewMode) {
