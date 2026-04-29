@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CalendarDays, Check, ChevronLeft, Dog, Menu, Plus, Users } from '@lucide/svelte'
+  import { CalendarDays, Check, ChevronLeft, ChevronRight, Dog, Menu, Plus, Users } from '@lucide/svelte'
   import { onMount } from 'svelte'
   import { seedIfEmpty } from './db'
   import { formatRoute, readRouteFromLocation, tabFromRoute, type AppRoute } from './lib/hashRoute'
@@ -30,8 +30,8 @@
   }
 
   const topTitle = $derived.by(() => {
-    if (route.name === 'calendar') return 'Calendar'
     if ($topNavConfig.title) return $topNavConfig.title
+    if (route.name === 'calendar') return 'Calendar'
     if (route.name === 'dogs') {
       if (route.segment === 'list') return 'Dogs'
       if (route.segment === 'new') return 'New dog'
@@ -61,6 +61,7 @@
   })
 
   const showOverflow = $derived(($topNavConfig.overflow?.length ?? 0) > 0)
+  const navActions = $derived($topNavConfig.actions ?? [])
   const showSave = $derived(typeof $topNavConfig.onSave === 'function')
 
   function actionIsLink(action: OverflowAction): action is OverflowAction & { href: string } {
@@ -92,6 +93,27 @@
         <a class="nav-button" href={backHref} aria-label="Go back">
           <ChevronLeft size={20} strokeWidth={2.4} aria-hidden="true" />
         </a>
+      {/if}
+      {#if navActions.length > 0}
+        <div class="nav-action-group">
+          {#each navActions as action (action.label)}
+            <button
+              type="button"
+              class="nav-button"
+              class:nav-button-label={!action.icon}
+              aria-label={action.ariaLabel ?? action.label}
+              onclick={() => action.onclick()}
+            >
+              {#if action.icon === 'chevron-left'}
+                <ChevronLeft size={18} strokeWidth={2.6} aria-hidden="true" />
+              {:else if action.icon === 'chevron-right'}
+                <ChevronRight size={18} strokeWidth={2.6} aria-hidden="true" />
+              {:else}
+                {action.label}
+              {/if}
+            </button>
+          {/each}
+        </div>
       {/if}
     </div>
 
@@ -249,6 +271,21 @@
     color: var(--color-text);
     text-decoration: none;
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  }
+  .nav-action-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .nav-action-group .nav-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+  .nav-action-group .nav-button-label {
+    width: auto;
+    min-width: 0;
+    padding: 0 0.65rem;
   }
   .nav-button-primary {
     border-color: var(--color-primary);

@@ -8,17 +8,27 @@ export type OverflowAction = {
   danger?: boolean
 }
 
+export type TopNavAction = {
+  label: string
+  ariaLabel?: string
+  icon?: 'chevron-left' | 'chevron-right'
+  variant?: 'icon' | 'label'
+  onclick: () => void | Promise<void>
+}
+
 export type TopNavConfig = {
   title?: string
+  action?: TopNavAction
+  actions?: TopNavAction[]
   onSave?: () => void | Promise<void>
   saving?: boolean
   overflow?: OverflowAction[]
 }
 
-const defaultTopNavConfig: Required<TopNavConfig> = {
+const defaultTopNavConfig: TopNavConfig = {
   title: '',
-  onSave: undefined as never,
   saving: false,
+  actions: [],
   overflow: [],
 }
 
@@ -27,6 +37,8 @@ export const topNavConfig = writable<TopNavConfig>(defaultTopNavConfig)
 export function setTopNav(config: TopNavConfig): () => void {
   topNavConfig.set({
     title: config.title ?? '',
+    action: config.action,
+    actions: config.actions ?? (config.action ? [config.action] : []),
     onSave: config.onSave,
     saving: config.saving ?? false,
     overflow: config.overflow ?? [],
