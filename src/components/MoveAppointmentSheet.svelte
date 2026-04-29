@@ -1,96 +1,101 @@
 <script lang="ts">
-  import type { AppointmentRecord, DogRecord } from '../db'
-  import type { GroomingServiceLine } from '../types'
-  import { deleteAppointment, updateAppointment } from '../db'
+  import type { AppointmentRecord, DogRecord } from "../db";
+  import type { GroomingServiceLine } from "../types";
+  import { deleteAppointment, updateAppointment } from "../db";
 
   type Props = {
-    open: boolean
-    appointment: AppointmentRecord | null
-    dogs: DogRecord[]
-    onclose: () => void
-    onsaved: () => void
-  }
+    open: boolean;
+    appointment: AppointmentRecord | null;
+    dogs: DogRecord[];
+    onclose: () => void;
+    onsaved: () => void;
+  };
 
-  let { open, appointment, dogs, onclose, onsaved }: Props = $props()
+  let { open, appointment, dogs, onclose, onsaved }: Props = $props();
 
-  let dogId = $state<number | ''>('')
-  let startLocal = $state('')
+  let dogId = $state<number | "">("");
+  let startLocal = $state("");
   /** Length of visit in minutes; end = start + duration */
-  let durationMinutes = $state(60)
-  let notes = $state('')
-  let bath = $state(false)
-  let cut = $state(false)
-  let nail = $state(false)
-  let accessory = $state(false)
-  let accessoryNote = $state('')
-  let saving = $state(false)
-  let err = $state('')
+  let durationMinutes = $state(60);
+  let notes = $state("");
+  let bath = $state(false);
+  let cut = $state(false);
+  let nail = $state(false);
+  let accessory = $state(false);
+  let accessoryNote = $state("");
+  let saving = $state(false);
+  let err = $state("");
 
   function toLocalInput(ms: number): string {
-    const d = new Date(ms)
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+    const d = new Date(ms);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   function fromLocalInput(s: string): number {
-    return new Date(s).getTime()
+    return new Date(s).getTime();
   }
 
   function readLines(): GroomingServiceLine[] {
-    const out: GroomingServiceLine[] = []
-    if (bath) out.push({ kind: 'bath' })
-    if (cut) out.push({ kind: 'cut' })
-    if (nail) out.push({ kind: 'nail_trim' })
-    if (accessory) out.push({ kind: 'accessory_purchase', accessoryNote: accessoryNote || undefined })
-    return out.length ? out : [{ kind: 'bath' }]
+    const out: GroomingServiceLine[] = [];
+    if (bath) out.push({ kind: "bath" });
+    if (cut) out.push({ kind: "cut" });
+    if (nail) out.push({ kind: "nail_trim" });
+    if (accessory)
+      out.push({
+        kind: "accessory_purchase",
+        accessoryNote: accessoryNote || undefined,
+      });
+    return out.length ? out : [{ kind: "bath" }];
   }
 
   function applyLines(services: GroomingServiceLine[]) {
-    bath = services.some((s) => s.kind === 'bath')
-    cut = services.some((s) => s.kind === 'cut')
-    nail = services.some((s) => s.kind === 'nail_trim')
-    const ap = services.find((s) => s.kind === 'accessory_purchase')
-    accessory = !!ap
-    accessoryNote = ap && ap.kind === 'accessory_purchase' ? (ap.accessoryNote ?? '') : ''
+    bath = services.some((s) => s.kind === "bath");
+    cut = services.some((s) => s.kind === "cut");
+    nail = services.some((s) => s.kind === "nail_trim");
+    const ap = services.find((s) => s.kind === "accessory_purchase");
+    accessory = !!ap;
+    accessoryNote =
+      ap && ap.kind === "accessory_purchase" ? (ap.accessoryNote ?? "") : "";
   }
 
   $effect(() => {
     if (open && appointment?.id != null) {
-      err = ''
-      dogId = appointment.dogId
-      startLocal = toLocalInput(appointment.start)
+      err = "";
+      dogId = appointment.dogId;
+      startLocal = toLocalInput(appointment.start);
       durationMinutes = Math.max(
         5,
         Math.round((appointment.end - appointment.start) / 60_000) || 60,
-      )
-      notes = appointment.notes ?? ''
-      applyLines(appointment.services ?? [{ kind: 'bath' }])
+      );
+      notes = appointment.notes ?? "";
+      applyLines(appointment.services ?? [{ kind: "bath" }]);
     }
-  })
+  });
 
   const computedEndMs = $derived.by(() => {
-    if (!startLocal) return 0
-    const start = fromLocalInput(startLocal)
-    const d = Number(durationMinutes)
-    if (!Number.isFinite(d) || d < 5) return start
-    return start + d * 60_000
-  })
+    if (!startLocal) return 0;
+    const start = fromLocalInput(startLocal);
+    const d = Number(durationMinutes);
+    if (!Number.isFinite(d) || d < 5) return start;
+    return start + d * 60_000;
+  });
 
   async function save() {
-    if (!appointment?.id) return
-    err = ''
-    if (dogId === '') {
-      err = 'Choose a dog.'
-      return
+    if (!appointment?.id) return;
+    err = "";
+    if (dogId === "") {
+      err = "Choose a dog.";
+      return;
     }
-    const start = fromLocalInput(startLocal)
-    const d = Number(durationMinutes)
+    const start = fromLocalInput(startLocal);
+    const d = Number(durationMinutes);
     if (!Number.isFinite(d) || d < 5) {
-      err = 'Duration must be at least 5 minutes.'
-      return
+      err = "Duration must be at least 5 minutes.";
+      return;
     }
-    const end = start + d * 60_000
-    saving = true
+    const end = start + d * 60_000;
+    saving = true;
     try {
       await updateAppointment({
         id: appointment.id,
@@ -99,28 +104,28 @@
         end,
         services: readLines(),
         notes: notes.trim() || undefined,
-      })
-      onsaved()
-      onclose()
+      });
+      onsaved();
+      onclose();
     } catch (e) {
-      err = e instanceof Error ? e.message : 'Could not save.'
+      err = e instanceof Error ? e.message : "Could not save.";
     } finally {
-      saving = false
+      saving = false;
     }
   }
 
   async function remove() {
-    if (!appointment?.id) return
-    if (!confirm('Delete this appointment?')) return
-    saving = true
+    if (!appointment?.id) return;
+    if (!confirm("Delete this appointment?")) return;
+    saving = true;
     try {
-      await deleteAppointment(appointment.id)
-      onsaved()
-      onclose()
+      await deleteAppointment(appointment.id);
+      onsaved();
+      onclose();
     } catch (e) {
-      err = e instanceof Error ? e.message : 'Could not delete.'
+      err = e instanceof Error ? e.message : "Could not delete.";
     } finally {
-      saving = false
+      saving = false;
     }
   }
 </script>
@@ -131,7 +136,7 @@
     class="sheet-backdrop"
     role="presentation"
     onclick={onclose}
-    onkeydown={(e) => e.key === 'Escape' && onclose()}
+    onkeydown={(e) => e.key === "Escape" && onclose()}
   >
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div
@@ -170,16 +175,27 @@
           bind:value={durationMinutes}
         />
         <p class="end-preview">
-          Ends {new Date(computedEndMs).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+          Ends {new Date(computedEndMs).toLocaleString([], {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })}
         </p>
       </div>
 
       <fieldset>
         <legend>Services</legend>
-        <label class="inline"><input type="checkbox" bind:checked={bath} /> Bath</label>
-        <label class="inline"><input type="checkbox" bind:checked={cut} /> Cut</label>
-        <label class="inline"><input type="checkbox" bind:checked={nail} /> Nail trim</label>
-        <label class="inline"><input type="checkbox" bind:checked={accessory} /> Accessory</label>
+        <label class="inline"
+          ><input type="checkbox" bind:checked={bath} /> Bath</label
+        >
+        <label class="inline"
+          ><input type="checkbox" bind:checked={cut} /> Cut</label
+        >
+        <label class="inline"
+          ><input type="checkbox" bind:checked={nail} /> Nail trim</label
+        >
+        <label class="inline"
+          ><input type="checkbox" bind:checked={accessory} /> Accessory</label
+        >
         {#if accessory}
           <div class="field">
             <label for="macc">Accessory note</label>
@@ -196,9 +212,13 @@
       {#if err}<p class="error-text">{err}</p>{/if}
 
       <div class="row-actions">
-        <button type="button" class="primary" onclick={save} disabled={saving}>Save</button>
+        <button type="button" class="primary" onclick={save} disabled={saving}
+          >Save</button
+        >
         <button type="button" onclick={onclose}>Close</button>
-        <button type="button" class="danger" onclick={remove} disabled={saving}>Delete</button>
+        <button type="button" class="danger" onclick={remove} disabled={saving}
+          >Delete</button
+        >
       </div>
     </div>
   </div>

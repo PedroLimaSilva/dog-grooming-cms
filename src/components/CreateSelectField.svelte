@@ -1,96 +1,102 @@
 <script lang="ts" generics="Item extends { id?: number }">
-
   type Props = {
-    id: string
-    label: string
-    items: Item[]
-    selectedId?: number | ''
-    placeholder?: string
-    createLabel?: string
-    emptyLabel?: string
-    getLabel: (item: Item) => string
-    getDetail?: (item: Item) => string
-    oncreate: (name: string) => Promise<number>
-  }
+    id: string;
+    label: string;
+    items: Item[];
+    selectedId?: number | "";
+    placeholder?: string;
+    createLabel?: string;
+    emptyLabel?: string;
+    getLabel: (item: Item) => string;
+    getDetail?: (item: Item) => string;
+    oncreate: (name: string) => Promise<number>;
+  };
 
   let {
     id,
     label,
     items,
-    selectedId = $bindable<number | ''>(''),
-    placeholder = 'Search…',
-    createLabel = 'Create',
-    emptyLabel = 'No matches',
+    selectedId = $bindable<number | "">(""),
+    placeholder = "Search…",
+    createLabel = "Create",
+    emptyLabel = "No matches",
     getLabel,
     getDetail,
     oncreate,
-  }: Props = $props()
+  }: Props = $props();
 
-  let query = $state('')
-  let focused = $state(false)
-  let creating = $state(false)
-  let err = $state('')
+  let query = $state("");
+  let focused = $state(false);
+  let creating = $state(false);
+  let err = $state("");
 
-  const normalizedQuery = $derived(query.trim().toLocaleLowerCase())
+  const normalizedQuery = $derived(query.trim().toLocaleLowerCase());
   const selectedItem = $derived.by(() => {
-    if (selectedId === '') return undefined
-    return items.find((item) => item.id === Number(selectedId))
-  })
+    if (selectedId === "") return undefined;
+    return items.find((item) => item.id === Number(selectedId));
+  });
   const filteredItems = $derived.by(() => {
-    if (!normalizedQuery) return items.slice(0, 8)
+    if (!normalizedQuery) return items.slice(0, 8);
     return items
       .filter((item) => {
-        const detail = getDetail?.(item) ?? ''
-        return [getLabel(item), detail].some((value) => value.toLocaleLowerCase().includes(normalizedQuery))
+        const detail = getDetail?.(item) ?? "";
+        return [getLabel(item), detail].some((value) =>
+          value.toLocaleLowerCase().includes(normalizedQuery),
+        );
       })
-      .slice(0, 8)
-  })
+      .slice(0, 8);
+  });
   const exactMatch = $derived.by(() =>
-    items.some((item) => getLabel(item).trim().toLocaleLowerCase() === normalizedQuery),
-  )
-  const canCreate = $derived(normalizedQuery.length > 0 && !exactMatch)
-  const listOpen = $derived(focused && (filteredItems.length > 0 || canCreate || items.length === 0))
+    items.some(
+      (item) => getLabel(item).trim().toLocaleLowerCase() === normalizedQuery,
+    ),
+  );
+  const canCreate = $derived(normalizedQuery.length > 0 && !exactMatch);
+  const listOpen = $derived(
+    focused && (filteredItems.length > 0 || canCreate || items.length === 0),
+  );
 
   $effect(() => {
-    if (!selectedItem) return
-    query = getLabel(selectedItem)
-  })
+    if (!selectedItem) return;
+    query = getLabel(selectedItem);
+  });
 
   function choose(item: Item) {
-    if (item.id == null) return
-    selectedId = item.id
-    query = getLabel(item)
-    focused = false
-    err = ''
+    if (item.id == null) return;
+    selectedId = item.id;
+    query = getLabel(item);
+    focused = false;
+    err = "";
   }
 
   async function createFromQuery() {
-    const name = query.trim()
-    if (!name || creating) return
-    err = ''
-    creating = true
+    const name = query.trim();
+    if (!name || creating) return;
+    err = "";
+    creating = true;
     try {
-      const newId = await oncreate(name)
-      selectedId = newId
-      query = name
-      focused = false
+      const newId = await oncreate(name);
+      selectedId = newId;
+      query = name;
+      focused = false;
     } catch (e) {
-      err = e instanceof Error ? e.message : 'Could not create.'
+      err = e instanceof Error ? e.message : "Could not create.";
     } finally {
-      creating = false
+      creating = false;
     }
   }
 
   function onInput() {
-    selectedId = ''
-    err = ''
+    selectedId = "";
+    err = "";
   }
 </script>
 
 <div
   class="create-select"
   onfocusout={(e) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) focused = false
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+      focused = false;
   }}
 >
   <label for={id}>{label}</label>
@@ -106,11 +112,11 @@
     onfocus={() => (focused = true)}
     oninput={onInput}
     onkeydown={(e) => {
-      if (e.key === 'Enter' && canCreate) {
-        e.preventDefault()
-        void createFromQuery()
+      if (e.key === "Enter" && canCreate) {
+        e.preventDefault();
+        void createFromQuery();
       }
-      if (e.key === 'Escape') focused = false
+      if (e.key === "Escape") focused = false;
     }}
   />
 
@@ -141,7 +147,7 @@
           onclick={createFromQuery}
           disabled={creating}
         >
-          {creating ? 'Creating…' : `${createLabel} "${query.trim()}"`}
+          {creating ? "Creating…" : `${createLabel} "${query.trim()}"`}
         </button>
       {:else if filteredItems.length === 0}
         <p class="empty">{emptyLabel}</p>

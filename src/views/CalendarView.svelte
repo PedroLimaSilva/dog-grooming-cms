@@ -1,279 +1,302 @@
 <script lang="ts">
-  import { Calendar, DayGrid, Interaction, TimeGrid } from '@event-calendar/core'
-  import '@event-calendar/core/index.css'
-  import { liveQuery } from 'dexie'
-  import { onMount, tick } from 'svelte'
-  import AppointmentFormModal from '../components/AppointmentFormModal.svelte'
-  import MoveAppointmentSheet from '../components/MoveAppointmentSheet.svelte'
-  import type { AppointmentRecord, DogRecord } from '../db'
-  import { db, updateAppointmentTimes } from '../db'
-  import { resetTopNav, setTopNav } from '../lib/topNav'
+  import {
+    Calendar,
+    DayGrid,
+    Interaction,
+    TimeGrid,
+  } from "@event-calendar/core";
+  import "@event-calendar/core/index.css";
+  import { liveQuery } from "dexie";
+  import { onMount, tick } from "svelte";
+  import AppointmentFormModal from "../components/AppointmentFormModal.svelte";
+  import MoveAppointmentSheet from "../components/MoveAppointmentSheet.svelte";
+  import type { AppointmentRecord, DogRecord } from "../db";
+  import { db, updateAppointmentTimes } from "../db";
+  import { resetTopNav, setTopNav } from "../lib/topNav";
 
-  const plugins = [DayGrid, TimeGrid, Interaction]
+  const plugins = [DayGrid, TimeGrid, Interaction];
 
-  type CalendarViewMode = 'timeGridDay' | 'timeGridWeek' | 'monthList'
+  type CalendarViewMode = "timeGridDay" | "timeGridWeek" | "monthList";
   type Cal = {
-    next: () => void
-    prev: () => void
-    unselect: () => void
-    setOption: (name: string, value: unknown) => unknown
-  }
+    next: () => void;
+    prev: () => void;
+    unselect: () => void;
+    setOption: (name: string, value: unknown) => unknown;
+  };
   type DatesSetInfo = {
-    start: Date
-    end: Date
-    view: { type: string; title?: string }
-  }
+    start: Date;
+    end: Date;
+    view: { type: string; title?: string };
+  };
   type MonthSection = {
-    key: string
-    label: string
-    days: Array<Date | null>
-  }
+    key: string;
+    label: string;
+    days: Array<Date | null>;
+  };
 
-  const monthWeekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const monthWeekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   /** Event Calendar instance; typed loosely because the package has no TS exports. */
-  let calendarInst = $state<unknown>()
-  const calendar = (): Cal | undefined => calendarInst as Cal | undefined
-  let appointments = $state<AppointmentRecord[]>([])
-  let dogs = $state<DogRecord[]>([])
+  let calendarInst = $state<unknown>();
+  const calendar = (): Cal | undefined => calendarInst as Cal | undefined;
+  let appointments = $state<AppointmentRecord[]>([]);
+  let dogs = $state<DogRecord[]>([]);
 
-  let createOpen = $state(false)
-  let createStart = $state(new Date())
-  let createEnd = $state(new Date())
-  let moveFor = $state<AppointmentRecord | null>(null)
-  let viewMode = $state<CalendarViewMode>('timeGridWeek')
-  let calendarDate = $state(new Date())
-  let topTitle = $state(monthTitle(new Date()))
-  let monthScroller = $state<HTMLDivElement>()
-  let relevantMonthKey = $state(monthKey(new Date()))
+  let createOpen = $state(false);
+  let createStart = $state(new Date());
+  let createEnd = $state(new Date());
+  let moveFor = $state<AppointmentRecord | null>(null);
+  let viewMode = $state<CalendarViewMode>("timeGridWeek");
+  let calendarDate = $state(new Date());
+  let topTitle = $state(monthTitle(new Date()));
+  let monthScroller = $state<HTMLDivElement>();
+  let relevantMonthKey = $state(monthKey(new Date()));
 
   onMount(() => {
     const s1 = liveQuery(() => db.appointments.toArray()).subscribe({
       next: (v) => {
-        appointments = v
+        appointments = v;
       },
-    })
+    });
     const s2 = liveQuery(() => db.dogs.toArray()).subscribe({
       next: (v) => {
-        dogs = v
+        dogs = v;
       },
-    })
+    });
     return () => {
-      s1.unsubscribe()
-      s2.unsubscribe()
-    }
-  })
+      s1.unsubscribe();
+      s2.unsubscribe();
+    };
+  });
 
   onMount(() => {
-    return () => resetTopNav()
-  })
+    return () => resetTopNav();
+  });
 
   function dogById(id: number) {
-    return dogs.find((d) => d.id === id)
+    return dogs.find((d) => d.id === id);
   }
 
   function eventsFromState() {
     return appointments
       .filter((a) => a.id != null)
       .map((a) => {
-        const dog = dogById(a.dogId)
-        const title = dog ? dog.name : `Dog #${a.dogId}`
+        const dog = dogById(a.dogId);
+        const title = dog ? dog.name : `Dog #${a.dogId}`;
         return {
           id: String(a.id),
           title,
           start: new Date(a.start),
           end: new Date(a.end),
           extendedProps: { appointmentId: a.id },
-        }
-      })
+        };
+      });
   }
 
   function startOfMonth(date: Date) {
-    return new Date(date.getFullYear(), date.getMonth(), 1)
+    return new Date(date.getFullYear(), date.getMonth(), 1);
   }
 
   function addMonths(date: Date, amount: number) {
-    return new Date(date.getFullYear(), date.getMonth() + amount, 1)
+    return new Date(date.getFullYear(), date.getMonth() + amount, 1);
   }
 
   function monthKey(date: Date) {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
   }
 
   function monthTitle(date: Date) {
-    return new Intl.DateTimeFormat(undefined, { month: 'long' }).format(date)
+    return new Intl.DateTimeFormat(undefined, { month: "long" }).format(date);
   }
 
   function yearTitle(date: Date) {
-    return new Intl.DateTimeFormat(undefined, { year: 'numeric' }).format(date)
+    return new Intl.DateTimeFormat(undefined, { year: "numeric" }).format(date);
   }
 
   function monthListTitle(date: Date) {
-    return yearTitle(date)
+    return yearTitle(date);
   }
 
   function sameMonth(a: Date, b: Date) {
-    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
   }
 
   function appointmentMonthStart(appointment: AppointmentRecord) {
-    return startOfMonth(new Date(appointment.start))
+    return startOfMonth(new Date(appointment.start));
   }
 
   function earliestAppointmentMonth() {
-    if (appointments.length === 0) return addMonths(startOfMonth(new Date()), -1)
-    const previousMonth = addMonths(startOfMonth(new Date()), -1)
+    if (appointments.length === 0)
+      return addMonths(startOfMonth(new Date()), -1);
+    const previousMonth = addMonths(startOfMonth(new Date()), -1);
     return appointments.reduce((earliest, appointment) => {
-      const candidate = appointmentMonthStart(appointment)
-      return candidate < earliest ? candidate : earliest
-    }, previousMonth)
+      const candidate = appointmentMonthStart(appointment);
+      return candidate < earliest ? candidate : earliest;
+    }, previousMonth);
   }
 
   function chooseRelevantMonth() {
-    const today = startOfMonth(new Date())
+    const today = startOfMonth(new Date());
     const futureAppointment = appointments
       .map(appointmentMonthStart)
       .filter((date) => date >= today)
-      .sort((a, b) => a.getTime() - b.getTime())[0]
-    return futureAppointment ?? today
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+    return futureAppointment ?? today;
   }
 
   const monthSections = $derived.by<MonthSection[]>(() => {
-    const current = startOfMonth(new Date())
-    const end = addMonths(current, 1)
-    const start = earliestAppointmentMonth()
-    const sections: MonthSection[] = []
+    const current = startOfMonth(new Date());
+    const end = addMonths(current, 1);
+    const start = earliestAppointmentMonth();
+    const sections: MonthSection[] = [];
 
     for (let cursor = start; cursor <= end; cursor = addMonths(cursor, 1)) {
-      const firstDay = new Date(cursor)
-      const leadingDays = Array.from<Date | null>({ length: firstDay.getDay() }).fill(null)
+      const firstDay = new Date(cursor);
+      const leadingDays = Array.from<Date | null>({
+        length: firstDay.getDay(),
+      }).fill(null);
       const monthDays = Array.from(
-        { length: new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0).getDate() },
+        {
+          length: new Date(
+            firstDay.getFullYear(),
+            firstDay.getMonth() + 1,
+            0,
+          ).getDate(),
+        },
         (_, i) => new Date(firstDay.getFullYear(), firstDay.getMonth(), i + 1),
-      )
+      );
       sections.push({
         key: monthKey(firstDay),
         label: monthTitle(firstDay),
         days: [...leadingDays, ...monthDays],
-      })
+      });
     }
 
-    return sections
-  })
+    return sections;
+  });
 
   function appointmentsForDay(day: Date) {
     return eventsFromState()
       .filter((event) => {
-        const start = event.start
+        const start = event.start;
         return (
           start.getFullYear() === day.getFullYear() &&
           start.getMonth() === day.getMonth() &&
           start.getDate() === day.getDate()
-        )
+        );
       })
-      .sort((a, b) => a.start.getTime() - b.start.getTime())
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
   }
 
   function formattedTime(date: Date) {
-    return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(date)
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
   }
 
   function weekdayLetter(date: Date) {
-    return new Intl.DateTimeFormat(undefined, { weekday: 'narrow' }).format(date)
+    return new Intl.DateTimeFormat(undefined, { weekday: "narrow" }).format(
+      date,
+    );
   }
 
   function formatTimeGridHeaders() {
-    if (typeof document === 'undefined') return
-    const headers = document.querySelectorAll<HTMLTimeElement>('.ec-time-grid .ec-header .ec-col-head time')
+    if (typeof document === "undefined") return;
+    const headers = document.querySelectorAll<HTMLTimeElement>(
+      ".ec-time-grid .ec-header .ec-col-head time",
+    );
     headers.forEach((header) => {
-      const date = new Date(`${header.dateTime}T00:00:00`)
-      if (Number.isNaN(date.getTime())) return
-      header.replaceChildren()
-      const weekday = document.createElement('span')
-      weekday.className = 'calendar-day-weekday'
-      weekday.textContent = weekdayLetter(date)
-      const day = document.createElement('span')
-      day.className = 'calendar-day-number'
-      day.textContent = String(date.getDate())
-      header.append(weekday, day)
-    })
+      const date = new Date(`${header.dateTime}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return;
+      header.replaceChildren();
+      const weekday = document.createElement("span");
+      weekday.className = "calendar-day-weekday";
+      weekday.textContent = weekdayLetter(date);
+      const day = document.createElement("span");
+      day.className = "calendar-day-number";
+      day.textContent = String(date.getDate());
+      header.append(weekday, day);
+    });
   }
 
   function queueHeaderFormatting() {
     void tick().then(() => {
-      requestAnimationFrame(formatTimeGridHeaders)
-      window.setTimeout(formatTimeGridHeaders, 80)
-    })
+      requestAnimationFrame(formatTimeGridHeaders);
+      window.setTimeout(formatTimeGridHeaders, 80);
+    });
   }
 
   function updateViewMode(mode: CalendarViewMode) {
-    viewMode = mode
-    if (mode !== 'monthList') {
-      calendar()?.setOption('view', mode)
-      calendar()?.setOption('date', calendarDate)
-      queueHeaderFormatting()
+    viewMode = mode;
+    if (mode !== "monthList") {
+      calendar()?.setOption("view", mode);
+      calendar()?.setOption("date", calendarDate);
+      queueHeaderFormatting();
     } else {
-      const relevant = chooseRelevantMonth()
-      calendarDate = relevant
-      relevantMonthKey = monthKey(relevant)
-      topTitle = monthListTitle(relevant)
+      const relevant = chooseRelevantMonth();
+      calendarDate = relevant;
+      relevantMonthKey = monthKey(relevant);
+      topTitle = monthListTitle(relevant);
     }
   }
 
   function updateMonthListDate(date: Date) {
-    const month = startOfMonth(date)
-    calendarDate = month
-    relevantMonthKey = monthKey(month)
-    topTitle = monthListTitle(month)
+    const month = startOfMonth(date);
+    calendarDate = month;
+    relevantMonthKey = monthKey(month);
+    topTitle = monthListTitle(month);
   }
 
   function moveCalendar(direction: -1 | 1) {
-    if (viewMode === 'monthList') {
-      updateMonthListDate(addMonths(calendarDate, direction))
+    if (viewMode === "monthList") {
+      updateMonthListDate(addMonths(calendarDate, direction));
     } else {
-      direction < 0 ? calendar()?.prev() : calendar()?.next()
-      queueHeaderFormatting()
+      direction < 0 ? calendar()?.prev() : calendar()?.next();
+      queueHeaderFormatting();
     }
   }
 
   function goToday() {
-    const today = new Date()
-    calendarDate = today
-    if (viewMode === 'monthList') {
-      updateMonthListDate(today)
+    const today = new Date();
+    calendarDate = today;
+    if (viewMode === "monthList") {
+      updateMonthListDate(today);
     } else {
-      calendar()?.setOption('date', today)
-      calendar()?.setOption('scrollTime', currentScrollTime())
-      queueHeaderFormatting()
+      calendar()?.setOption("date", today);
+      calendar()?.setOption("scrollTime", currentScrollTime());
+      queueHeaderFormatting();
     }
   }
 
   function currentScrollTime() {
-    const now = new Date()
-    const hour = String(Math.max(now.getHours() - 1, 0)).padStart(2, '0')
-    return `${hour}:00:00`
+    const now = new Date();
+    const hour = String(Math.max(now.getHours() - 1, 0)).padStart(2, "0");
+    return `${hour}:00:00`;
   }
 
   function datesSet(info: DatesSetInfo) {
-    calendarDate = info.start
-    if (info.view.type === 'timeGridWeek') {
-      const middleOfWeek = new Date((info.start.getTime() + info.end.getTime()) / 2)
-      topTitle = monthTitle(middleOfWeek)
-    } else if (info.view.type === 'timeGridDay') {
-      topTitle = monthTitle(info.start)
+    calendarDate = info.start;
+    if (info.view.type === "timeGridWeek") {
+      const middleOfWeek = new Date(
+        (info.start.getTime() + info.end.getTime()) / 2,
+      );
+      topTitle = monthTitle(middleOfWeek);
+    } else if (info.view.type === "timeGridDay") {
+      topTitle = monthTitle(info.start);
     }
-    queueHeaderFormatting()
+    queueHeaderFormatting();
   }
 
   function openAppointment(id: string) {
     void db.appointments.get(Number(id)).then((a) => {
-      moveFor = a ?? null
-    })
+      moveFor = a ?? null;
+    });
   }
 
   let options = $state({
-    view: 'timeGridWeek',
-    height: '100%',
+    view: "timeGridWeek",
+    height: "100%",
     events: [] as ReturnType<typeof eventsFromState>,
     editable: true,
     selectable: true,
@@ -282,88 +305,101 @@
     longPressDelay: 280,
     eventLongPressDelay: 350,
     selectLongPressDelay: 350,
-    slotMinTime: '07:00:00',
-    slotMaxTime: '24:00:00',
-    scrollTime: '09:00:00',
-    slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+    slotMinTime: "07:00:00",
+    slotMaxTime: "24:00:00",
+    scrollTime: "09:00:00",
+    slotLabelFormat: { hour: "2-digit", minute: "2-digit", hour12: false },
     allDaySlot: false,
     nowIndicator: true,
-    headerToolbar: { start: '', center: '', end: '' },
-    dayHeaderFormat: { weekday: 'narrow', day: 'numeric' },
-    titleFormat: { month: 'long' },
+    headerToolbar: { start: "", center: "", end: "" },
+    dayHeaderFormat: { weekday: "narrow", day: "numeric" },
+    titleFormat: { month: "long" },
     datesSet,
     select: (info: { start: Date; end: Date | null }) => {
-      createStart = info.start
-      createEnd = info.end ?? new Date(info.start.getTime() + 60 * 60 * 1000)
-      createOpen = true
-      calendar()?.unselect()
+      createStart = info.start;
+      createEnd = info.end ?? new Date(info.start.getTime() + 60 * 60 * 1000);
+      createOpen = true;
+      calendar()?.unselect();
     },
     eventClick: (info: { event: { id: string } }) => {
       void db.appointments.get(Number(info.event.id)).then((a) => {
-        moveFor = a ?? null
-      })
+        moveFor = a ?? null;
+      });
     },
     eventDrop: (info: {
-      event: { id: string; start: Date; end: Date | null }
-      revert: () => void
+      event: { id: string; start: Date; end: Date | null };
+      revert: () => void;
     }) => {
-      const end = info.event.end ?? new Date(info.event.start.getTime() + 60 * 60 * 1000)
+      const end =
+        info.event.end ?? new Date(info.event.start.getTime() + 60 * 60 * 1000);
       void updateAppointmentTimes(
         Number(info.event.id),
         info.event.start.getTime(),
         end.getTime(),
-      ).catch(() => info.revert())
+      ).catch(() => info.revert());
     },
     eventResize: (info: {
-      event: { id: string; start: Date; end: Date | null }
-      revert: () => void
+      event: { id: string; start: Date; end: Date | null };
+      revert: () => void;
     }) => {
-      const end = info.event.end ?? new Date(info.event.start.getTime() + 60 * 60 * 1000)
+      const end =
+        info.event.end ?? new Date(info.event.start.getTime() + 60 * 60 * 1000);
       void updateAppointmentTimes(
         Number(info.event.id),
         info.event.start.getTime(),
         end.getTime(),
-      ).catch(() => info.revert())
+      ).catch(() => info.revert());
     },
-  })
+  });
 
   $effect(() => {
     setTopNav({
       title: topTitle,
       actions: [
-        { label: 'Previous', ariaLabel: 'Previous period', icon: 'chevron-left', onclick: () => moveCalendar(-1) },
-        { label: 'Today', variant: 'label', onclick: goToday },
-        { label: 'Next', ariaLabel: 'Next period', icon: 'chevron-right', onclick: () => moveCalendar(1) },
+        {
+          label: "Previous",
+          ariaLabel: "Previous period",
+          icon: "chevron-left",
+          onclick: () => moveCalendar(-1),
+        },
+        { label: "Today", variant: "label", onclick: goToday },
+        {
+          label: "Next",
+          ariaLabel: "Next period",
+          icon: "chevron-right",
+          onclick: () => moveCalendar(1),
+        },
       ],
       overflow: [
-        { label: 'Day', onclick: () => updateViewMode('timeGridDay') },
-        { label: 'Week', onclick: () => updateViewMode('timeGridWeek') },
-        { label: 'Month', onclick: () => updateViewMode('monthList') },
+        { label: "Day", onclick: () => updateViewMode("timeGridDay") },
+        { label: "Week", onclick: () => updateViewMode("timeGridWeek") },
+        { label: "Month", onclick: () => updateViewMode("monthList") },
       ],
-    })
-  })
+    });
+  });
 
   $effect(() => {
-    options.events = eventsFromState()
-  })
+    options.events = eventsFromState();
+  });
 
   $effect(() => {
-    if (viewMode !== 'monthList') return
-    const relevant = chooseRelevantMonth()
-    relevantMonthKey = monthKey(relevant)
-    topTitle = monthListTitle(relevant)
-  })
+    if (viewMode !== "monthList") return;
+    const relevant = chooseRelevantMonth();
+    relevantMonthKey = monthKey(relevant);
+    topTitle = monthListTitle(relevant);
+  });
 
   $effect(() => {
-    if (viewMode !== 'monthList' || !monthScroller) return
-    const target = monthScroller.querySelector<HTMLElement>(`[data-month="${relevantMonthKey}"]`)
-    target?.scrollIntoView({ block: 'start' })
-  })
-
+    if (viewMode !== "monthList" || !monthScroller) return;
+    const target = monthScroller.querySelector<HTMLElement>(
+      `[data-month="${relevantMonthKey}"]`,
+    );
+    target?.scrollIntoView({ block: "start" });
+  });
 </script>
 
 <div class="ec-shell ec-auto-dark">
-  {#if viewMode === 'monthList'}
+  {#if viewMode === "monthList"}
     <div class="month-list" bind:this={monthScroller}>
       {#each monthSections as month (month.key)}
         <section class="month-section" data-month={month.key}>
@@ -375,12 +411,20 @@
             {#each month.days as day, index (day ? day.toDateString() : `placeholder-${month.key}-${index}`)}
               {#if day}
                 {@const dayAppointments = appointmentsForDay(day)}
-                <article class="month-day" class:today={sameMonth(day, new Date()) && day.getDate() === new Date().getDate()}>
+                <article
+                  class="month-day"
+                  class:today={sameMonth(day, new Date()) &&
+                    day.getDate() === new Date().getDate()}
+                >
                   <div class="month-day-number">{day.getDate()}</div>
                   <div class="month-day-content">
                     {#if dayAppointments.length > 0}
                       {#each dayAppointments as appointment (appointment.id)}
-                        <button type="button" class="month-event" onclick={() => openAppointment(appointment.id)}>
+                        <button
+                          type="button"
+                          class="month-event"
+                          onclick={() => openAppointment(appointment.id)}
+                        >
                           <span>{formattedTime(appointment.start)}</span>
                           {appointment.title}
                         </button>

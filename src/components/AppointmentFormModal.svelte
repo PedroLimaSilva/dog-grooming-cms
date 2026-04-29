@@ -1,75 +1,80 @@
 <script lang="ts">
-  import CreateSelectField from './CreateSelectField.svelte'
-  import type { DogRecord } from '../db'
-  import type { GroomingServiceLine } from '../types'
-  import { createAppointment, createQuickDog } from '../db'
+  import CreateSelectField from "./CreateSelectField.svelte";
+  import type { DogRecord } from "../db";
+  import type { GroomingServiceLine } from "../types";
+  import { createAppointment, createQuickDog } from "../db";
 
   type Props = {
-    open: boolean
-    dogs: DogRecord[]
-    defaultStart: Date
-    defaultEnd: Date
-    onclose: () => void
-    onsaved: () => void
-  }
+    open: boolean;
+    dogs: DogRecord[];
+    defaultStart: Date;
+    defaultEnd: Date;
+    onclose: () => void;
+    onsaved: () => void;
+  };
 
-  let { open, dogs, defaultStart, defaultEnd, onclose, onsaved }: Props = $props()
+  let { open, dogs, defaultStart, defaultEnd, onclose, onsaved }: Props =
+    $props();
 
-  let dogId = $state<number | ''>('')
+  let dogId = $state<number | "">("");
   /** Visit length; end = start + duration */
-  let durationMinutes = $state(60)
-  let notes = $state('')
-  let bath = $state(true)
-  let cut = $state(false)
-  let nail = $state(false)
-  let accessory = $state(false)
-  let accessoryNote = $state('')
-  let saving = $state(false)
-  let err = $state('')
+  let durationMinutes = $state(60);
+  let notes = $state("");
+  let bath = $state(true);
+  let cut = $state(false);
+  let nail = $state(false);
+  let accessory = $state(false);
+  let accessoryNote = $state("");
+  let saving = $state(false);
+  let err = $state("");
 
   $effect(() => {
     if (open) {
-      err = ''
-      if (dogs.length === 1 && dogs[0].id != null) dogId = dogs[0].id
-      else dogId = ''
+      err = "";
+      if (dogs.length === 1 && dogs[0].id != null) dogId = dogs[0].id;
+      else dogId = "";
       const span = Math.round(
         (defaultEnd.getTime() - defaultStart.getTime()) / 60_000,
-      )
-      durationMinutes = Math.max(5, span || 60)
+      );
+      durationMinutes = Math.max(5, span || 60);
     }
-  })
+  });
 
   const computedEnd = $derived.by(() => {
-    const d = Number(durationMinutes)
-    const add = Number.isFinite(d) && d >= 5 ? d * 60_000 : 60 * 60_000
-    return new Date(defaultStart.getTime() + add)
-  })
+    const d = Number(durationMinutes);
+    const add = Number.isFinite(d) && d >= 5 ? d * 60_000 : 60 * 60_000;
+    return new Date(defaultStart.getTime() + add);
+  });
 
   function lines(): GroomingServiceLine[] {
-    const out: GroomingServiceLine[] = []
-    if (bath) out.push({ kind: 'bath' })
-    if (cut) out.push({ kind: 'cut' })
-    if (nail) out.push({ kind: 'nail_trim' })
-    if (accessory) out.push({ kind: 'accessory_purchase', accessoryNote: accessoryNote || undefined })
-    return out.length ? out : [{ kind: 'bath' }]
+    const out: GroomingServiceLine[] = [];
+    if (bath) out.push({ kind: "bath" });
+    if (cut) out.push({ kind: "cut" });
+    if (nail) out.push({ kind: "nail_trim" });
+    if (accessory)
+      out.push({
+        kind: "accessory_purchase",
+        accessoryNote: accessoryNote || undefined,
+      });
+    return out.length ? out : [{ kind: "bath" }];
   }
 
   async function createDog(name: string): Promise<number> {
-    return createQuickDog(name)
+    return createQuickDog(name);
   }
 
   async function save() {
-    err = ''
-    if (dogId === '') {
-      err = 'Choose a dog.'
-      return
+    err = "";
+    if (dogId === "") {
+      err = "Choose a dog.";
+      return;
     }
-    const d = Number(durationMinutes)
+    const d = Number(durationMinutes);
     if (!Number.isFinite(d) || d < 5) {
-      err = 'Duration must be at least 5 minutes.'
-      return
+      err = "Duration must be at least 5 minutes.";
+      return;
     }
-    saving = true
+    saving = true;
     try {
       await createAppointment({
         dogId: Number(dogId),
@@ -77,13 +82,13 @@
         end: defaultStart.getTime() + d * 60_000,
         services: lines(),
         notes: notes.trim() || undefined,
-      })
-      onsaved()
-      onclose()
+      });
+      onsaved();
+      onclose();
     } catch (e) {
-      err = e instanceof Error ? e.message : 'Could not save.'
+      err = e instanceof Error ? e.message : "Could not save.";
     } finally {
-      saving = false
+      saving = false;
     }
   }
 </script>
@@ -94,7 +99,7 @@
     class="sheet-backdrop"
     role="presentation"
     onclick={onclose}
-    onkeydown={(e) => e.key === 'Escape' && onclose()}
+    onkeydown={(e) => e.key === "Escape" && onclose()}
   >
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div
@@ -108,13 +113,27 @@
     >
       <h2 id="appt-title">New appointment</h2>
       <p class="muted">
-        Starts {defaultStart.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+        Starts {defaultStart.toLocaleString([], {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })}
       </p>
 
       <div class="field">
         <label for="dur">Duration (minutes)</label>
-        <input id="dur" type="number" min="5" step="5" bind:value={durationMinutes} />
-        <p class="muted end-line">Ends {computedEnd.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
+        <input
+          id="dur"
+          type="number"
+          min="5"
+          step="5"
+          bind:value={durationMinutes}
+        />
+        <p class="muted end-line">
+          Ends {computedEnd.toLocaleString([], {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })}
+        </p>
       </div>
 
       <div class="field">
@@ -127,35 +146,48 @@
           createLabel="Add dog"
           emptyLabel="No dogs found."
           getLabel={(d) => d.name}
-          getDetail={(d) => d.breed || 'Details can be added later'}
+          getDetail={(d) => d.breed || "Details can be added later"}
           oncreate={createDog}
         />
       </div>
 
       <fieldset>
         <legend>Services</legend>
-        <label class="inline"><input type="checkbox" bind:checked={bath} /> Bath</label>
-        <label class="inline"><input type="checkbox" bind:checked={cut} /> Cut</label>
-        <label class="inline"><input type="checkbox" bind:checked={nail} /> Nail trim</label>
-        <label class="inline"><input type="checkbox" bind:checked={accessory} /> Accessory</label>
+        <label class="inline"
+          ><input type="checkbox" bind:checked={bath} /> Bath</label
+        >
+        <label class="inline"
+          ><input type="checkbox" bind:checked={cut} /> Cut</label
+        >
+        <label class="inline"
+          ><input type="checkbox" bind:checked={nail} /> Nail trim</label
+        >
+        <label class="inline"
+          ><input type="checkbox" bind:checked={accessory} /> Accessory</label
+        >
         {#if accessory}
           <div class="field">
             <label for="acc">Accessory note</label>
-            <input id="acc" bind:value={accessoryNote} placeholder="e.g. shampoo sold" />
+            <input
+              id="acc"
+              bind:value={accessoryNote}
+              placeholder="e.g. shampoo sold"
+            />
           </div>
         {/if}
       </fieldset>
 
       <div class="field">
         <label for="notes">Notes</label>
-        <textarea id="notes" rows="2" bind:value={notes} placeholder="Optional"></textarea>
+        <textarea id="notes" rows="2" bind:value={notes} placeholder="Optional"
+        ></textarea>
       </div>
 
       {#if err}<p class="error-text">{err}</p>{/if}
 
       <div class="row-actions">
         <button type="button" class="primary" onclick={save} disabled={saving}>
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? "Saving…" : "Save"}
         </button>
         <button type="button" onclick={onclose}>Cancel</button>
       </div>

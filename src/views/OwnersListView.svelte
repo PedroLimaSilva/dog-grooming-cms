@@ -1,33 +1,40 @@
 <script lang="ts">
-  import { liveQuery } from 'dexie'
-  import { onMount } from 'svelte'
-  import SearchField from '../components/SearchField.svelte'
-  import type { OwnerRecord } from '../db'
-  import { db } from '../db'
+  import { liveQuery } from "dexie";
+  import { onMount } from "svelte";
+  import SearchField from "../components/SearchField.svelte";
+  import type { OwnerRecord } from "../db";
+  import { db } from "../db";
 
-  let rows = $state<OwnerRecord[]>([])
-  let searchQuery = $state('')
+  let rows = $state<OwnerRecord[]>([]);
+  let searchQuery = $state("");
 
   onMount(() => {
-    const sub = liveQuery(() => db.owners.orderBy('name').toArray()).subscribe({
+    const sub = liveQuery(() => db.owners.orderBy("name").toArray()).subscribe({
       next: (v) => {
-        rows = v
+        rows = v;
       },
-    })
-    return () => sub.unsubscribe()
-  })
+    });
+    return () => sub.unsubscribe();
+  });
 
-  const normalizedSearch = $derived(searchQuery.trim().toLocaleLowerCase())
+  const normalizedSearch = $derived(searchQuery.trim().toLocaleLowerCase());
   const filteredRows = $derived(
     normalizedSearch
-      ? rows.filter((o) => [o.name, o.phone, o.email].some((v) => v?.toLocaleLowerCase().includes(normalizedSearch)))
+      ? rows.filter((o) =>
+          [o.name, o.phone, o.email].some((v) =>
+            v?.toLocaleLowerCase().includes(normalizedSearch),
+          ),
+        )
       : rows,
-  )
+  );
 </script>
 
 <div class="panel">
-
-  <SearchField bind:value={searchQuery} placeholder="Search owners" label="Search owners" />
+  <SearchField
+    bind:value={searchQuery}
+    placeholder="Search owners"
+    label="Search owners"
+  />
 
   {#if rows.length === 0}
     <p class="empty-hint">No owners yet. Add one before adding dogs.</p>

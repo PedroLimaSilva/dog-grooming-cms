@@ -1,89 +1,111 @@
 <script lang="ts">
-  import { CalendarDays, Check, ChevronLeft, ChevronRight, Dog, Menu, Plus, Settings, Users } from '@lucide/svelte'
-  import { onMount } from 'svelte'
-  import { seedIfEmpty } from './db'
-  import { formatRoute, readRouteFromLocation, tabFromRoute, type AppRoute } from './lib/hashRoute'
-  import { topNavConfig, type OverflowAction } from './lib/topNav'
-  import CalendarView from './views/CalendarView.svelte'
-  import DogDetailView from './views/DogDetailView.svelte'
-  import DogsListView from './views/DogsListView.svelte'
-  import OwnerDetailView from './views/OwnerDetailView.svelte'
-  import OwnersListView from './views/OwnersListView.svelte'
-  import SettingsView from './views/SettingsView.svelte'
+  import {
+    CalendarDays,
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    Dog,
+    Menu,
+    Plus,
+    Settings,
+    Users,
+  } from "@lucide/svelte";
+  import { onMount } from "svelte";
+  import { seedIfEmpty } from "./db";
+  import {
+    formatRoute,
+    readRouteFromLocation,
+    tabFromRoute,
+    type AppRoute,
+  } from "./lib/hashRoute";
+  import { topNavConfig, type OverflowAction } from "./lib/topNav";
+  import CalendarView from "./views/CalendarView.svelte";
+  import DogDetailView from "./views/DogDetailView.svelte";
+  import DogsListView from "./views/DogsListView.svelte";
+  import OwnerDetailView from "./views/OwnerDetailView.svelte";
+  import OwnersListView from "./views/OwnersListView.svelte";
+  import SettingsView from "./views/SettingsView.svelte";
 
-  let route = $state<AppRoute>(readRouteFromLocation())
-  let overflowOpen = $state(false)
+  let route = $state<AppRoute>(readRouteFromLocation());
+  let overflowOpen = $state(false);
 
   onMount(() => {
-    void seedIfEmpty()
+    void seedIfEmpty();
     const onHash = () => {
-      route = readRouteFromLocation()
-    }
-    window.addEventListener('hashchange', onHash)
-    return () => window.removeEventListener('hashchange', onHash)
-  })
+      route = readRouteFromLocation();
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  });
 
-  function go(tab: 'calendar' | 'dogs' | 'owners' | 'settings') {
-    overflowOpen = false
-    if (tab === 'calendar') window.location.hash = formatRoute({ name: 'calendar' })
-    if (tab === 'dogs') window.location.hash = formatRoute({ name: 'dogs', segment: 'list' })
-    if (tab === 'owners') window.location.hash = formatRoute({ name: 'owners', segment: 'list' })
-    if (tab === 'settings') window.location.hash = formatRoute({ name: 'settings' })
+  function go(tab: "calendar" | "dogs" | "owners" | "settings") {
+    overflowOpen = false;
+    if (tab === "calendar")
+      window.location.hash = formatRoute({ name: "calendar" });
+    if (tab === "dogs")
+      window.location.hash = formatRoute({ name: "dogs", segment: "list" });
+    if (tab === "owners")
+      window.location.hash = formatRoute({ name: "owners", segment: "list" });
+    if (tab === "settings")
+      window.location.hash = formatRoute({ name: "settings" });
   }
 
   const topTitle = $derived.by(() => {
-    if (route.name === 'settings') return 'Settings'
-    if ($topNavConfig.title) return $topNavConfig.title
-    if (route.name === 'calendar') return 'Calendar'
-    if (route.name === 'dogs') {
-      if (route.segment === 'list') return 'Dogs'
-      if (route.segment === 'new') return 'New dog'
-      return 'Dog'
+    if (route.name === "settings") return "Settings";
+    if ($topNavConfig.title) return $topNavConfig.title;
+    if (route.name === "calendar") return "Calendar";
+    if (route.name === "dogs") {
+      if (route.segment === "list") return "Dogs";
+      if (route.segment === "new") return "New dog";
+      return "Dog";
     }
-    if (route.segment === 'list') return 'Owners'
-    if (route.segment === 'new') return 'New owner'
-    return 'Owner'
-  })
+    if (route.segment === "list") return "Owners";
+    if (route.segment === "new") return "New owner";
+    return "Owner";
+  });
 
   const backHref = $derived.by(() => {
-    if (route.name === 'dogs' && route.segment !== 'list') return '#/dogs'
-    if (route.name === 'owners' && route.segment !== 'list') return '#/owners'
-    return ''
-  })
+    if (route.name === "dogs" && route.segment !== "list") return "#/dogs";
+    if (route.name === "owners" && route.segment !== "list") return "#/owners";
+    return "";
+  });
 
   const createHref = $derived.by(() => {
-    if (route.name === 'dogs' && route.segment === 'list') return '#/dogs/new'
-    if (route.name === 'owners' && route.segment === 'list') return '#/owners/new'
-    return ''
-  })
+    if (route.name === "dogs" && route.segment === "list") return "#/dogs/new";
+    if (route.name === "owners" && route.segment === "list")
+      return "#/owners/new";
+    return "";
+  });
 
   const createLabel = $derived.by(() => {
-    if (route.name === 'dogs' && route.segment === 'list') return 'Dog'
-    if (route.name === 'owners' && route.segment === 'list') return 'Owner'
-    return ''
-  })
+    if (route.name === "dogs" && route.segment === "list") return "Dog";
+    if (route.name === "owners" && route.segment === "list") return "Owner";
+    return "";
+  });
 
-  const showOverflow = $derived(($topNavConfig.overflow?.length ?? 0) > 0)
-  const navActions = $derived($topNavConfig.actions ?? [])
-  const showSave = $derived(typeof $topNavConfig.onSave === 'function')
+  const showOverflow = $derived(($topNavConfig.overflow?.length ?? 0) > 0);
+  const navActions = $derived($topNavConfig.actions ?? []);
+  const showSave = $derived(typeof $topNavConfig.onSave === "function");
 
-  function actionIsLink(action: OverflowAction): action is OverflowAction & { href: string } {
-    return typeof action.href === 'string' && action.href.length > 0
+  function actionIsLink(
+    action: OverflowAction,
+  ): action is OverflowAction & { href: string } {
+    return typeof action.href === "string" && action.href.length > 0;
   }
 
   function runOverflowAction(action: OverflowAction) {
-    overflowOpen = false
-    action.onclick?.()
+    overflowOpen = false;
+    action.onclick?.();
   }
 
   function closeOverflow() {
-    overflowOpen = false
+    overflowOpen = false;
   }
 
   function closeOverflowFromWindow(event: MouseEvent) {
-    const target = event.target
-    if (target instanceof Element && target.closest('.overflow')) return
-    closeOverflow()
+    const target = event.target;
+    if (target instanceof Element && target.closest(".overflow")) return;
+    closeOverflow();
   }
 </script>
 
@@ -107,9 +129,9 @@
               aria-label={action.ariaLabel ?? action.label}
               onclick={() => action.onclick()}
             >
-              {#if action.icon === 'chevron-left'}
+              {#if action.icon === "chevron-left"}
                 <ChevronLeft size={18} strokeWidth={2.6} aria-hidden="true" />
-              {:else if action.icon === 'chevron-right'}
+              {:else if action.icon === "chevron-right"}
                 <ChevronRight size={18} strokeWidth={2.6} aria-hidden="true" />
               {:else}
                 {action.label}
@@ -124,7 +146,11 @@
 
     <div class="topbar-slot topbar-slot-right">
       {#if createHref}
-        <a class="nav-button nav-button-primary nav-button-label" href={createHref} aria-label="Add {createLabel}">
+        <a
+          class="nav-button nav-button-primary nav-button-label"
+          href={createHref}
+          aria-label="Add {createLabel}"
+        >
           <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
           <span>{createLabel}</span>
         </a>
@@ -146,15 +172,19 @@
                 {#if actionIsLink(action)}
                   <a
                     href={action.href}
-                    target={action.external ? '_blank' : undefined}
-                    rel={action.external ? 'noopener noreferrer' : undefined}
+                    target={action.external ? "_blank" : undefined}
+                    rel={action.external ? "noopener noreferrer" : undefined}
                     class:danger={action.danger}
                     onclick={closeOverflow}
                   >
                     {action.label}
                   </a>
                 {:else}
-                  <button type="button" class:danger={action.danger} onclick={() => runOverflowAction(action)}>
+                  <button
+                    type="button"
+                    class:danger={action.danger}
+                    onclick={() => runOverflowAction(action)}
+                  >
                     {action.label}
                   </button>
                 {/if}
@@ -164,7 +194,13 @@
         </div>
       {/if}
       {#if showSave}
-        <button type="button" class="nav-button nav-button-save" aria-label="Save" disabled={$topNavConfig.saving} onclick={() => $topNavConfig.onSave?.()}>
+        <button
+          type="button"
+          class="nav-button nav-button-save"
+          aria-label="Save"
+          disabled={$topNavConfig.saving}
+          onclick={() => $topNavConfig.onSave?.()}
+        >
           <Check size={20} strokeWidth={2.6} aria-hidden="true" />
         </button>
       {/if}
@@ -172,23 +208,23 @@
   </header>
 
   <main class="main">
-    {#if route.name === 'calendar'}
+    {#if route.name === "calendar"}
       <CalendarView />
-    {:else if route.name === 'settings'}
+    {:else if route.name === "settings"}
       <SettingsView />
-    {:else if route.name === 'dogs'}
-      {#if route.segment === 'list'}
+    {:else if route.name === "dogs"}
+      {#if route.segment === "list"}
         <DogsListView />
-      {:else if route.segment === 'new'}
+      {:else if route.segment === "new"}
         <DogDetailView mode="new" />
       {:else}
         {#key route.segment.id}
           <DogDetailView mode="edit" dogId={route.segment.id} />
         {/key}
       {/if}
-    {:else if route.segment === 'list'}
+    {:else if route.segment === "list"}
       <OwnersListView />
-    {:else if route.segment === 'new'}
+    {:else if route.segment === "new"}
       <OwnerDetailView mode="new" />
     {:else}
       {#key route.segment.id}
@@ -198,19 +234,35 @@
   </main>
 
   <nav class="tabbar" aria-label="Main">
-    <button type="button" class:active={tabFromRoute(route) === 'calendar'} onclick={() => go('calendar')}>
+    <button
+      type="button"
+      class:active={tabFromRoute(route) === "calendar"}
+      onclick={() => go("calendar")}
+    >
       <CalendarDays size={20} strokeWidth={2.2} aria-hidden="true" />
       <span>Calendar</span>
     </button>
-    <button type="button" class:active={tabFromRoute(route) === 'dogs'} onclick={() => go('dogs')}>
+    <button
+      type="button"
+      class:active={tabFromRoute(route) === "dogs"}
+      onclick={() => go("dogs")}
+    >
       <Dog size={20} strokeWidth={2.2} aria-hidden="true" />
       <span>Dogs</span>
     </button>
-    <button type="button" class:active={tabFromRoute(route) === 'owners'} onclick={() => go('owners')}>
+    <button
+      type="button"
+      class:active={tabFromRoute(route) === "owners"}
+      onclick={() => go("owners")}
+    >
       <Users size={20} strokeWidth={2.2} aria-hidden="true" />
       <span>Owners</span>
     </button>
-    <button type="button" class:active={tabFromRoute(route) === 'settings'} onclick={() => go('settings')}>
+    <button
+      type="button"
+      class:active={tabFromRoute(route) === "settings"}
+      onclick={() => go("settings")}
+    >
       <Settings size={20} strokeWidth={2.2} aria-hidden="true" />
       <span>Settings</span>
     </button>
@@ -242,7 +294,8 @@
     height: var(--topbar-h);
     padding: calc(0.5rem + var(--safe-top)) 1rem 0.5rem;
     background: color-mix(in srgb, var(--color-bg) 88%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-border) 70%, transparent);
     backdrop-filter: blur(16px);
   }
   .topbar h1 {
@@ -368,7 +421,8 @@
     gap: 0.35rem;
     padding: 0.5rem 0.75rem calc(0.5rem + var(--safe-bottom));
     background: color-mix(in srgb, var(--color-surface) 90%, transparent);
-    border-top: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-border) 70%, transparent);
     box-shadow: var(--shadow-tabbar);
     backdrop-filter: blur(16px);
   }

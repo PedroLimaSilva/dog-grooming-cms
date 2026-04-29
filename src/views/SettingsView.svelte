@@ -1,51 +1,59 @@
 <script lang="ts">
-  import { Cloud, CloudOff, Info } from '@lucide/svelte'
-  import { onMount } from 'svelte'
+  import { Cloud, CloudOff, Info } from "@lucide/svelte";
+  import { onMount } from "svelte";
   import {
     clearDropboxSyncPrefs,
     readDropboxSyncPrefs,
     writeDropboxSyncPrefs,
     type DropboxSyncPrefs,
-  } from '../lib/dropboxSyncPrefs'
-  import { resetTopNav } from '../lib/topNav'
+  } from "../lib/dropboxSyncPrefs";
+  import { resetTopNav } from "../lib/topNav";
 
-  let prefs = $state<DropboxSyncPrefs>(readDropboxSyncPrefs())
-  let connectBusy = $state(false)
+  let prefs = $state<DropboxSyncPrefs>(readDropboxSyncPrefs());
+  let connectBusy = $state(false);
 
   onMount(() => {
-    return () => resetTopNav()
-  })
+    return () => resetTopNav();
+  });
 
   function refreshPrefs() {
-    prefs = readDropboxSyncPrefs()
+    prefs = readDropboxSyncPrefs();
   }
 
   async function connectDropbox() {
-    connectBusy = true
+    connectBusy = true;
     try {
       // OAuth + PKCE will replace this stub; prefs persist UI until then.
-      await new Promise((r) => setTimeout(r, 400))
+      await new Promise((r) => setTimeout(r, 400));
       writeDropboxSyncPrefs({
         linked: true,
-        accountLabel: 'Dropbox (demo)',
+        accountLabel: "Dropbox (demo)",
         linkedAt: new Date().toISOString(),
-      })
-      refreshPrefs()
+      });
+      refreshPrefs();
     } finally {
-      connectBusy = false
+      connectBusy = false;
     }
   }
 
   function disconnectDropbox() {
-    if (!prefs.linked) return
-    if (!confirm('Disconnect Dropbox on this device? Local data stays; sync and automatic upload stop.')) return
-    clearDropboxSyncPrefs()
-    refreshPrefs()
+    if (!prefs.linked) return;
+    if (
+      !confirm(
+        "Disconnect Dropbox on this device? Local data stays; sync and automatic upload stop.",
+      )
+    )
+      return;
+    clearDropboxSyncPrefs();
+    refreshPrefs();
   }
 </script>
 
 <div class="panel">
-  <p class="lede">Back up and sync your salon across devices using a single file in your Dropbox app folder.</p>
+  <p class="lede">
+    Back up and sync your salon across devices using a single file in your
+    Dropbox app folder.
+  </p>
 
   <section class="card" aria-labelledby="sync-heading">
     <div class="card-head">
@@ -60,13 +68,17 @@
     {#if prefs.linked}
       <p class="status-line">
         <Cloud size={18} strokeWidth={2.2} aria-hidden="true" />
-        Linked{prefs.accountLabel ? ` as ${prefs.accountLabel}` : ''}.
+        Linked{prefs.accountLabel ? ` as ${prefs.accountLabel}` : ""}.
         {#if prefs.linkedAt}
-          <span class="muted">Connected {new Date(prefs.linkedAt).toLocaleString()}.</span>
+          <span class="muted"
+            >Connected {new Date(prefs.linkedAt).toLocaleString()}.</span
+          >
         {/if}
       </p>
       <p class="hint">
-        When OAuth is wired up, local changes will upload here automatically (debounced). You can disconnect anytime; your data remains on this device.
+        When OAuth is wired up, local changes will upload here automatically
+        (debounced). You can disconnect anytime; your data remains on this
+        device.
       </p>
       <div class="row-actions">
         <button type="button" class="danger" onclick={disconnectDropbox}>
@@ -76,14 +88,23 @@
       </div>
     {:else}
       <p class="hint">
-        Sign in with Dropbox to store <strong>grooming-data.json</strong> under the app folder only. The app never sees your full Dropbox.
+        Sign in with Dropbox to store <strong>grooming-data.json</strong> under the
+        app folder only. The app never sees your full Dropbox.
       </p>
       <div class="row-actions">
-        <button type="button" class="primary" disabled={connectBusy} onclick={connectDropbox}>
-          {connectBusy ? 'Connecting…' : 'Connect Dropbox'}
+        <button
+          type="button"
+          class="primary"
+          disabled={connectBusy}
+          onclick={connectDropbox}
+        >
+          {connectBusy ? "Connecting…" : "Connect Dropbox"}
         </button>
       </div>
-      <p class="fineprint">Dropbox sign-in (OAuth with PKCE) will replace this placeholder once the app is registered.</p>
+      <p class="fineprint">
+        Dropbox sign-in (OAuth with PKCE) will replace this placeholder once the
+        app is registered.
+      </p>
     {/if}
   </section>
 
@@ -91,7 +112,10 @@
     <Info size={18} strokeWidth={2.2} aria-hidden="true" />
     <div>
       <strong>Privacy</strong>
-      <p>Only the Dropbox app folder is used. Salon data leaves this device only through that authenticated file.</p>
+      <p>
+        Only the Dropbox app folder is used. Salon data leaves this device only
+        through that authenticated file.
+      </p>
     </div>
   </section>
 </div>

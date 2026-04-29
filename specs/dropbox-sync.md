@@ -8,10 +8,10 @@ This document describes **behavior** and **user-visible rules**. Implementation 
 
 ## Definitions
 
-| Term | Meaning |
-|------|---------|
-| **Sync file** | The one canonical backup file in Dropbox holding the full app dataset. |
-| **Local database** | IndexedDB via Dexie (`owners`, `dogs`, `appointments`); see `domain-model.md`. |
+| Term                | Meaning                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Sync file**       | The one canonical backup file in Dropbox holding the full app dataset.                                |
+| **Local database**  | IndexedDB via Dexie (`owners`, `dogs`, `appointments`); see `domain-model.md`.                        |
 | **Remote revision** | Dropbox’s content version for the sync file (e.g. `rev` / server metadata used to detect overwrites). |
 
 ## Dropbox app model
@@ -28,14 +28,14 @@ This document describes **behavior** and **user-visible rules**. Implementation 
 
 The sync file is JSON with a **wrapper** so imports stay safe across app updates.
 
-| Field | Type | Required | Notes |
-|-------|------|----------|--------|
-| `schemaVersion` | number | yes | Start at `1`; bump when breaking structure changes. |
-| `exportedAt` | string (ISO 8601) | yes | When this snapshot was written (client clock). |
-| `appBuild` | string | optional | Human-readable app version for support/debug. |
-| `owners` | array | yes | Matches `Owner` records including `id`. |
-| `dogs` | array | yes | Matches `Dog` records including `id`. |
-| `appointments` | array | yes | Matches `Appointment` records including `id`. |
+| Field           | Type              | Required | Notes                                               |
+| --------------- | ----------------- | -------- | --------------------------------------------------- |
+| `schemaVersion` | number            | yes      | Start at `1`; bump when breaking structure changes. |
+| `exportedAt`    | string (ISO 8601) | yes      | When this snapshot was written (client clock).      |
+| `appBuild`      | string            | optional | Human-readable app version for support/debug.       |
+| `owners`        | array             | yes      | Matches `Owner` records including `id`.             |
+| `dogs`          | array             | yes      | Matches `Dog` records including `id`.               |
+| `appointments`  | array             | yes      | Matches `Appointment` records including `id`.       |
 
 **Identity rules**
 
@@ -83,11 +83,11 @@ Showing **appointments** count as well is recommended so the user understands ca
 
 Present a **multi-select** (e.g. two options, both can be selected) whose meaning is **which source(s) to include** in the outcome:
 
-| User selection | Resulting behavior |
-|----------------|--------------------|
-| **Remote only** | Replace local Dexie data with the remote snapshot (Import behavior). Then upload is consistent with “local = remote” unless the user edits again. Equivalent to “discard this device’s data and use Dropbox.” |
-| **Local only** | Keep current Dexie data; **do not** apply remote rows. **Upload** local snapshot to Dropbox (may **overwrite** the remote file—user must be warned). Equivalent to “ignore Dropbox and push this device.” |
-| **Local + remote** | **Merge** both datasets into Dexie (see Merge behavior), then **export** the combined snapshot to Dropbox so other devices see one combined file. |
+| User selection     | Resulting behavior                                                                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Remote only**    | Replace local Dexie data with the remote snapshot (Import behavior). Then upload is consistent with “local = remote” unless the user edits again. Equivalent to “discard this device’s data and use Dropbox.” |
+| **Local only**     | Keep current Dexie data; **do not** apply remote rows. **Upload** local snapshot to Dropbox (may **overwrite** the remote file—user must be warned). Equivalent to “ignore Dropbox and push this device.”     |
+| **Local + remote** | **Merge** both datasets into Dexie (see Merge behavior), then **export** the combined snapshot to Dropbox so other devices see one combined file.                                                             |
 
 The UI must make the three outcomes and their consequences explicit (especially overwrite vs discard).
 

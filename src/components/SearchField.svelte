@@ -1,13 +1,17 @@
 <script lang="ts">
-  import Search from '@lucide/svelte/icons/search'
+  import Search from "@lucide/svelte/icons/search";
 
   type Props = {
-    value?: string
-    placeholder?: string
-    label?: string
-  }
+    value?: string;
+    placeholder?: string;
+    label?: string;
+  };
 
-  let { value = $bindable(''), placeholder = 'Search', label = 'Search' }: Props = $props()
+  let {
+    value = $bindable(""),
+    placeholder = "Search",
+    label = "Search",
+  }: Props = $props();
 </script>
 
 <label class="search-field">
@@ -15,7 +19,13 @@
   <span class="search-icon" aria-hidden="true">
     <Search size={18.4} stroke-width={2} absoluteStrokeWidth />
   </span>
-  <input type="search" bind:value {placeholder} autocomplete="off" spellcheck="false" />
+  <input
+    type="search"
+    bind:value
+    {placeholder}
+    autocomplete="off"
+    spellcheck="false"
+  />
 </label>
 
 <style>

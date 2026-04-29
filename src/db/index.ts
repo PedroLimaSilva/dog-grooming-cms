@@ -1,61 +1,67 @@
-import Dexie, { type EntityTable } from 'dexie'
-import type { Appointment, Dog, GroomingServiceLine, Owner } from '../types'
+import Dexie, { type EntityTable } from "dexie";
+import type { Appointment, Dog, GroomingServiceLine, Owner } from "../types";
 
-export type OwnerRecord = Owner
-export type DogRecord = Dog
-export type AppointmentRecord = Appointment
+export type OwnerRecord = Owner;
+export type DogRecord = Dog;
+export type AppointmentRecord = Appointment;
 
-const SEED_KEY = 'grooming-seeded-v1'
+const SEED_KEY = "grooming-seeded-v1";
 
 export class GroomingDB extends Dexie {
-  owners!: EntityTable<OwnerRecord, 'id'>
-  dogs!: EntityTable<DogRecord, 'id'>
-  appointments!: EntityTable<AppointmentRecord, 'id'>
+  owners!: EntityTable<OwnerRecord, "id">;
+  dogs!: EntityTable<DogRecord, "id">;
+  appointments!: EntityTable<AppointmentRecord, "id">;
 
   constructor() {
-    super('groomingSalonDB')
+    super("groomingSalonDB");
     this.version(1).stores({
-      owners: '++id, name',
-      dogs: '++id, primaryOwnerId, name',
-      appointments: '++id, dogId, start',
-    })
+      owners: "++id, name",
+      dogs: "++id, primaryOwnerId, name",
+      appointments: "++id, dogId, start",
+    });
     this.version(2).stores({
-      owners: '++id, name',
-      dogs: '++id, primaryOwnerId, name',
-      appointments: '++id, dogId, start',
-    })
+      owners: "++id, name",
+      dogs: "++id, primaryOwnerId, name",
+      appointments: "++id, dogId, start",
+    });
   }
 }
 
-export const db = new GroomingDB()
+export const db = new GroomingDB();
 
 export async function seedIfEmpty(): Promise<void> {
-  if (typeof localStorage === 'undefined') return
-  if (localStorage.getItem(SEED_KEY)) return
-  const n = await db.owners.count()
+  if (typeof localStorage === "undefined") return;
+  if (localStorage.getItem(SEED_KEY)) return;
+  const n = await db.owners.count();
   if (n > 0) {
-    localStorage.setItem(SEED_KEY, '1')
-    return
+    localStorage.setItem(SEED_KEY, "1");
+    return;
   }
 
-  const jamie = (await db.owners.add({ name: 'Jamie Smith', phone: '+1 555-0100' })) as number
-  const alex = (await db.owners.add({ name: 'Alex Ruiz', phone: '+1 555-0101' })) as number
+  const jamie = (await db.owners.add({
+    name: "Jamie Smith",
+    phone: "+1 555-0100",
+  })) as number;
+  const alex = (await db.owners.add({
+    name: "Alex Ruiz",
+    phone: "+1 555-0101",
+  })) as number;
 
   const cocoa = (await db.dogs.add({
-    name: 'Cocoa',
-    breed: 'Poodle',
-    dateOfBirth: '2020-03-15',
-    specialCareNotes: 'Sensitive ears; no perfumed shampoo',
+    name: "Cocoa",
+    breed: "Poodle",
+    dateOfBirth: "2020-03-15",
+    specialCareNotes: "Sensitive ears; no perfumed shampoo",
     primaryOwnerId: jamie,
-  })) as number
+  })) as number;
   await db.dogs.add({
-    name: 'Bear',
-    breed: 'Golden Retriever',
-    dateOfBirth: '2019-07-01',
+    name: "Bear",
+    breed: "Golden Retriever",
+    dateOfBirth: "2019-07-01",
     primaryOwnerId: alex,
-  })
+  });
 
-  const now = new Date()
+  const now = new Date();
   const start = new Date(
     now.getFullYear(),
     now.getMonth(),
@@ -64,31 +70,35 @@ export async function seedIfEmpty(): Promise<void> {
     0,
     0,
     0,
-  ).getTime()
-  const end = start + 60 * 60 * 1000
+  ).getTime();
+  const end = start + 60 * 60 * 1000;
   await db.appointments.add({
     dogId: cocoa,
     start,
     end,
-    services: [{ kind: 'bath' }, { kind: 'cut' }],
-    notes: 'Demo appointment',
-  })
+    services: [{ kind: "bath" }, { kind: "cut" }],
+    notes: "Demo appointment",
+  });
 
-  localStorage.setItem(SEED_KEY, '1')
+  localStorage.setItem(SEED_KEY, "1");
 }
 
 export async function upsertOwner(row: OwnerRecord): Promise<number> {
   if (row.id != null) {
-    await db.owners.put(row)
-    return row.id
+    await db.owners.put(row);
+    return row.id;
   }
-  return (await db.owners.add({ name: row.name, phone: row.phone, email: row.email })) as number
+  return (await db.owners.add({
+    name: row.name,
+    phone: row.phone,
+    email: row.email,
+  })) as number;
 }
 
 export async function upsertDog(row: DogRecord): Promise<number> {
   if (row.id != null) {
-    await db.dogs.put(row)
-    return row.id
+    await db.dogs.put(row);
+    return row.id;
   }
   return (await db.dogs.add({
     name: row.name,
@@ -96,38 +106,38 @@ export async function upsertDog(row: DogRecord): Promise<number> {
     dateOfBirth: row.dateOfBirth,
     specialCareNotes: row.specialCareNotes,
     primaryOwnerId: row.primaryOwnerId,
-  })) as number
+  })) as number;
 }
 
 export async function createQuickOwner(name: string): Promise<number> {
-  return upsertOwner({ name: name.trim(), phone: '' })
+  return upsertOwner({ name: name.trim(), phone: "" });
 }
 
 export async function createQuickDog(name: string): Promise<number> {
-  return upsertDog({ name: name.trim() })
+  return upsertDog({ name: name.trim() });
 }
 
 export async function deleteOwner(id: number): Promise<void> {
-  const linked = await db.dogs.where('primaryOwnerId').equals(id).count()
+  const linked = await db.dogs.where("primaryOwnerId").equals(id).count();
   if (linked > 0) {
-    throw new Error('Cannot delete owner while dogs still reference them.')
+    throw new Error("Cannot delete owner while dogs still reference them.");
   }
-  await db.owners.delete(id)
+  await db.owners.delete(id);
 }
 
 export async function deleteDog(id: number): Promise<void> {
-  await db.appointments.where('dogId').equals(id).delete()
-  await db.dogs.delete(id)
+  await db.appointments.where("dogId").equals(id).delete();
+  await db.dogs.delete(id);
 }
 
-const defaultServices: GroomingServiceLine[] = [{ kind: 'bath' }]
+const defaultServices: GroomingServiceLine[] = [{ kind: "bath" }];
 
 export async function createAppointment(input: {
-  dogId: number
-  start: number
-  end: number
-  services?: GroomingServiceLine[]
-  notes?: string
+  dogId: number;
+  start: number;
+  end: number;
+  services?: GroomingServiceLine[];
+  notes?: string;
 }): Promise<number> {
   return (await db.appointments.add({
     dogId: input.dogId,
@@ -135,7 +145,7 @@ export async function createAppointment(input: {
     end: input.end,
     services: input.services?.length ? input.services : defaultServices,
     notes: input.notes,
-  })) as number
+  })) as number;
 }
 
 export async function updateAppointmentTimes(
@@ -143,21 +153,21 @@ export async function updateAppointmentTimes(
   start: number,
   end: number,
 ): Promise<void> {
-  const prev = await db.appointments.get(id)
-  if (!prev) return
-  await db.appointments.put({ ...prev, start, end })
+  const prev = await db.appointments.get(id);
+  if (!prev) return;
+  await db.appointments.put({ ...prev, start, end });
 }
 
 export async function updateAppointment(input: {
-  id: number
-  dogId: number
-  start: number
-  end: number
-  services: GroomingServiceLine[]
-  notes?: string
+  id: number;
+  dogId: number;
+  start: number;
+  end: number;
+  services: GroomingServiceLine[];
+  notes?: string;
 }): Promise<void> {
-  const prev = await db.appointments.get(input.id)
-  if (!prev) return
+  const prev = await db.appointments.get(input.id);
+  if (!prev) return;
   await db.appointments.put({
     ...prev,
     dogId: input.dogId,
@@ -165,9 +175,9 @@ export async function updateAppointment(input: {
     end: input.end,
     services: input.services,
     notes: input.notes,
-  })
+  });
 }
 
 export async function deleteAppointment(id: number): Promise<void> {
-  await db.appointments.delete(id)
+  await db.appointments.delete(id);
 }
