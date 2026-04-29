@@ -148,7 +148,6 @@
         <input id="ophone" bind:value={phone} type="tel" autocomplete="tel" />
       </div>
       {#if err}<p class="error-text">{err}</p>{/if}
-      <button type="submit" class="visually-hidden-submit" disabled={saving}>Save</button>
     </form>
 
     {#if mode === 'edit' && owner?.id != null}

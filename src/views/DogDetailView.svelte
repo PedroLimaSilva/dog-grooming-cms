@@ -203,7 +203,6 @@
         </select>
       </div>
       {#if err}<p class="error-text">{err}</p>{/if}
-      <button type="submit" class="visually-hidden-submit" disabled={saving}>Save</button>
     </form>
   {/if}
 </div>
