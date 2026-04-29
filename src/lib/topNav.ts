@@ -8,8 +8,14 @@ export type OverflowAction = {
   danger?: boolean
 }
 
+export type TopNavAction = {
+  label: string
+  onclick: () => void | Promise<void>
+}
+
 export type TopNavConfig = {
   title?: string
+  action?: TopNavAction
   onSave?: () => void | Promise<void>
   saving?: boolean
   overflow?: OverflowAction[]
@@ -17,6 +23,7 @@ export type TopNavConfig = {
 
 const defaultTopNavConfig: Required<TopNavConfig> = {
   title: '',
+  action: undefined as never,
   onSave: undefined as never,
   saving: false,
   overflow: [],
@@ -27,6 +34,7 @@ export const topNavConfig = writable<TopNavConfig>(defaultTopNavConfig)
 export function setTopNav(config: TopNavConfig): () => void {
   topNavConfig.set({
     title: config.title ?? '',
+    action: config.action,
     onSave: config.onSave,
     saving: config.saving ?? false,
     overflow: config.overflow ?? [],

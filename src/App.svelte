@@ -30,8 +30,8 @@
   }
 
   const topTitle = $derived.by(() => {
-    if (route.name === 'calendar') return 'Calendar'
     if ($topNavConfig.title) return $topNavConfig.title
+    if (route.name === 'calendar') return 'Calendar'
     if (route.name === 'dogs') {
       if (route.segment === 'list') return 'Dogs'
       if (route.segment === 'new') return 'New dog'
@@ -61,6 +61,7 @@
   })
 
   const showOverflow = $derived(($topNavConfig.overflow?.length ?? 0) > 0)
+  const showAction = $derived(typeof $topNavConfig.action?.onclick === 'function')
   const showSave = $derived(typeof $topNavConfig.onSave === 'function')
 
   function actionIsLink(action: OverflowAction): action is OverflowAction & { href: string } {
@@ -103,6 +104,16 @@
           <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
           <span>{createLabel}</span>
         </a>
+      {/if}
+      {#if showAction}
+        <button
+          type="button"
+          class="nav-button nav-button-label"
+          aria-label={$topNavConfig.action?.label}
+          onclick={() => $topNavConfig.action?.onclick()}
+        >
+          {$topNavConfig.action?.label}
+        </button>
       {/if}
       {#if showOverflow}
         <div class="overflow">
