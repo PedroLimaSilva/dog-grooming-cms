@@ -1,18 +1,38 @@
 <script lang="ts">
-  import { Cloud, CloudOff, Info } from "@lucide/svelte";
+  import { Cloud, CloudOff, Info, RefreshCw } from "@lucide/svelte";
   import { onMount } from "svelte";
   import {
     clearDropboxSyncPrefs,
     readDropboxSyncPrefs,
-    writeDropboxSyncPrefs,
+    isDropboxLinked,
     type DropboxSyncPrefs,
   } from "../lib/dropboxSyncPrefs";
+  import {
+    beginDropboxAuthorization,
+    getDropboxAppKey,
+  } from "../lib/dropbox/oauth";
+  import { exportCurrentDatabaseToDropbox } from "../lib/dropbox/exportUpload";
+  import {
+    clearBootstrapOAuthError,
+    readBootstrapOAuthError,
+  } from "../lib/dropbox/bootstrap";
   import { resetTopNav } from "../lib/topNav";
 
   let prefs = $state<DropboxSyncPrefs>(readDropboxSyncPrefs());
   let connectBusy = $state(false);
+  let uploadBusy = $state(false);
+  let flashError = $state("");
+  let flashOk = $state("");
+
+  const connected = $derived(isDropboxLinked());
+  const appKeyConfigured = $derived(getDropboxAppKey().length > 0);
 
   onMount(() => {
+    const oauthErr = readBootstrapOAuthError();
+    if (oauthErr) {
+      flashError = oauthErr;
+      clearBootstrapOAuthError();
+    }
     return () => resetTopNav();
   });
 
@@ -21,26 +41,43 @@
   }
 
   async function connectDropbox() {
+    flashError = "";
+    flashOk = "";
+    if (!appKeyConfigured) {
+      flashError =
+        "Add VITE_DROPBOX_APP_KEY to .env (see .env.example), restart the dev server, then try again.";
+      return;
+    }
     connectBusy = true;
     try {
-      // OAuth + PKCE will replace this stub; prefs persist UI until then.
-      await new Promise((r) => setTimeout(r, 400));
-      writeDropboxSyncPrefs({
-        linked: true,
-        accountLabel: "Dropbox (demo)",
-        linkedAt: new Date().toISOString(),
-      });
-      refreshPrefs();
+      await beginDropboxAuthorization();
+    } catch (e) {
+      flashError = e instanceof Error ? e.message : String(e);
     } finally {
       connectBusy = false;
     }
   }
 
+  async function uploadNow() {
+    flashError = "";
+    flashOk = "";
+    uploadBusy = true;
+    try {
+      await exportCurrentDatabaseToDropbox();
+      flashOk = "Dropbox is up to date.";
+      refreshPrefs();
+    } catch (e) {
+      flashError = e instanceof Error ? e.message : String(e);
+    } finally {
+      uploadBusy = false;
+    }
+  }
+
   function disconnectDropbox() {
-    if (!prefs.linked) return;
+    if (!connected) return;
     if (
       !confirm(
-        "Disconnect Dropbox on this device? Local data stays; sync and automatic upload stop.",
+        "Disconnect Dropbox on this device? Local data stays; automatic upload stops.",
       )
     )
       return;
@@ -55,20 +92,27 @@
     Dropbox app folder.
   </p>
 
+  {#if flashError}
+    <p class="banner error">{flashError}</p>
+  {/if}
+  {#if flashOk}
+    <p class="banner ok">{flashOk}</p>
+  {/if}
+
   <section class="card" aria-labelledby="sync-heading">
     <div class="card-head">
       <h2 id="sync-heading">Dropbox sync</h2>
-      {#if prefs.linked}
+      {#if connected}
         <span class="badge badge-on">On</span>
       {:else}
         <span class="badge">Off</span>
       {/if}
     </div>
 
-    {#if prefs.linked}
+    {#if connected}
       <p class="status-line">
         <Cloud size={18} strokeWidth={2.2} aria-hidden="true" />
-        Linked{prefs.accountLabel ? ` as ${prefs.accountLabel}` : ""}.
+        Signed in{prefs.accountLabel ? ` as ${prefs.accountLabel}` : ""}.
         {#if prefs.linkedAt}
           <span class="muted"
             >Connected {new Date(prefs.linkedAt).toLocaleString()}.</span
@@ -76,35 +120,47 @@
         {/if}
       </p>
       <p class="hint">
-        When OAuth is wired up, local changes will upload here automatically
-        (debounced). You can disconnect anytime; your data remains on this
-        device.
-      </p>
-      <div class="row-actions">
-        <button type="button" class="danger" onclick={disconnectDropbox}>
-          <CloudOff size={18} strokeWidth={2.2} aria-hidden="true" />
-          Disconnect Dropbox
-        </button>
-      </div>
-    {:else}
-      <p class="hint">
-        Sign in with Dropbox to store <strong>grooming-data.json</strong> under the
-        app folder only. The app never sees your full Dropbox.
+        Local changes upload automatically after a short delay. If two devices
+        edit offline, Dropbox may reject an upload until you resolve the
+        conflict (reload vs overwrite).
       </p>
       <div class="row-actions">
         <button
           type="button"
           class="primary"
-          disabled={connectBusy}
-          onclick={connectDropbox}
+          disabled={uploadBusy}
+          onclick={() => void uploadNow()}
         >
-          {connectBusy ? "Connecting…" : "Connect Dropbox"}
+          <RefreshCw size={18} strokeWidth={2.2} aria-hidden="true" />
+          {uploadBusy ? "Uploading…" : "Upload now"}
+        </button>
+        <button type="button" class="danger" onclick={disconnectDropbox}>
+          <CloudOff size={18} strokeWidth={2.2} aria-hidden="true" />
+          Disconnect
         </button>
       </div>
-      <p class="fineprint">
-        Dropbox sign-in (OAuth with PKCE) will replace this placeholder once the
-        app is registered.
+    {:else}
+      <p class="hint">
+        Sign in with Dropbox (PKCE, no app secret in the browser). Data is
+        stored as <strong>grooming-data.json</strong> in the app folder only.
       </p>
+      {#if !appKeyConfigured}
+        <p class="warn">
+          Set <code>VITE_DROPBOX_APP_KEY</code> in <code>.env</code> and add the
+          same redirect URI in the Dropbox app settings (see
+          <code>.env.example</code>).
+        </p>
+      {/if}
+      <div class="row-actions">
+        <button
+          type="button"
+          class="primary"
+          disabled={connectBusy}
+          onclick={() => void connectDropbox()}
+        >
+          {connectBusy ? "Redirecting…" : "Connect Dropbox"}
+        </button>
+      </div>
     {/if}
   </section>
 
@@ -130,6 +186,23 @@
     margin: 0 0 1.25rem;
     color: var(--color-muted);
     font-size: 0.95rem;
+  }
+  .banner {
+    margin: 0 0 1rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    line-height: 1.4;
+  }
+  .banner.error {
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+    color: var(--color-danger);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  }
+  .banner.ok {
+    background: var(--color-primary-soft-bg);
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary-soft-border);
   }
   .card {
     background: var(--color-surface);
@@ -183,11 +256,14 @@
     color: var(--color-muted);
     line-height: 1.45;
   }
-  .fineprint {
-    margin: 0.75rem 0 0;
-    font-size: 0.8rem;
+  .warn {
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
     color: var(--color-muted);
-    line-height: 1.4;
+    line-height: 1.45;
+  }
+  .warn code {
+    font-size: 0.8rem;
   }
   .muted {
     display: block;

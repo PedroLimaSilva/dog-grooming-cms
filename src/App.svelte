@@ -11,7 +11,19 @@
     Users,
   } from "@lucide/svelte";
   import { onMount } from "svelte";
+  import SyncBootstrapModal from "./components/SyncBootstrapModal.svelte";
   import { seedIfEmpty } from "./db";
+  import {
+    applyBootstrapLocalOnly,
+    applyBootstrapMergeBoth,
+    applyBootstrapRemoteOnly,
+    runDropboxBootstrapAfterLink,
+    type BootstrapNeedChoice,
+  } from "./lib/dropbox/bootstrap";
+  import {
+    OAUTH_ERROR_KEY,
+    OAUTH_RUN_BOOTSTRAP_KEY,
+  } from "./lib/dropbox/constants";
   import {
     formatRoute,
     readRouteFromLocation,
@@ -28,9 +40,24 @@
 
   let route = $state<AppRoute>(readRouteFromLocation());
   let overflowOpen = $state(false);
+  let bootstrapChoice = $state<BootstrapNeedChoice | null>(null);
 
   onMount(() => {
-    void seedIfEmpty();
+    void (async () => {
+      await seedIfEmpty();
+      if (
+        typeof sessionStorage !== "undefined" &&
+        sessionStorage.getItem(OAUTH_RUN_BOOTSTRAP_KEY)
+      ) {
+        sessionStorage.removeItem(OAUTH_RUN_BOOTSTRAP_KEY);
+        const r = await runDropboxBootstrapAfterLink();
+        if (r.kind === "need_choice") {
+          bootstrapChoice = r;
+        } else if (r.kind === "error") {
+          sessionStorage.setItem(OAUTH_ERROR_KEY, r.message);
+        }
+      }
+    })();
     const onHash = () => {
       route = readRouteFromLocation();
     };
@@ -232,6 +259,28 @@
       {/key}
     {/if}
   </main>
+
+  {#if bootstrapChoice}
+    <SyncBootstrapModal
+      local={bootstrapChoice.local}
+      remoteCounts={bootstrapChoice.remoteCounts}
+      remote={bootstrapChoice.remote}
+      onClose={() => {
+        bootstrapChoice = null;
+      }}
+      onConfirm={async (mode) => {
+        const c = bootstrapChoice;
+        if (!c) return;
+        if (mode === "remote_only") {
+          await applyBootstrapRemoteOnly(c.remote, c.remoteRev);
+        } else if (mode === "local_only") {
+          await applyBootstrapLocalOnly();
+        } else {
+          await applyBootstrapMergeBoth(c.remote);
+        }
+      }}
+    />
+  {/if}
 
   <nav class="tabbar" aria-label="Main">
     <button

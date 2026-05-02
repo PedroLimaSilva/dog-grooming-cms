@@ -29,6 +29,13 @@ export class GroomingDB extends Dexie {
 
 export const db = new GroomingDB();
 
+function notifyDropboxExport(): void {
+  if (typeof window === "undefined") return;
+  void import("../lib/dropbox/dropboxExportTrigger").then((m) =>
+    m.scheduleDropboxExport(),
+  );
+}
+
 export async function seedIfEmpty(): Promise<void> {
   if (typeof localStorage === "undefined") return;
   if (localStorage.getItem(SEED_KEY)) return;
@@ -86,27 +93,33 @@ export async function seedIfEmpty(): Promise<void> {
 export async function upsertOwner(row: OwnerRecord): Promise<number> {
   if (row.id != null) {
     await db.owners.put(row);
+    notifyDropboxExport();
     return row.id;
   }
-  return (await db.owners.add({
+  const id = (await db.owners.add({
     name: row.name,
     phone: row.phone,
     email: row.email,
   })) as number;
+  notifyDropboxExport();
+  return id;
 }
 
 export async function upsertDog(row: DogRecord): Promise<number> {
   if (row.id != null) {
     await db.dogs.put(row);
+    notifyDropboxExport();
     return row.id;
   }
-  return (await db.dogs.add({
+  const id = (await db.dogs.add({
     name: row.name,
     breed: row.breed,
     dateOfBirth: row.dateOfBirth,
     specialCareNotes: row.specialCareNotes,
     primaryOwnerId: row.primaryOwnerId,
   })) as number;
+  notifyDropboxExport();
+  return id;
 }
 
 export async function createQuickOwner(name: string): Promise<number> {
@@ -123,11 +136,13 @@ export async function deleteOwner(id: number): Promise<void> {
     throw new Error("Cannot delete owner while dogs still reference them.");
   }
   await db.owners.delete(id);
+  notifyDropboxExport();
 }
 
 export async function deleteDog(id: number): Promise<void> {
   await db.appointments.where("dogId").equals(id).delete();
   await db.dogs.delete(id);
+  notifyDropboxExport();
 }
 
 const defaultServices: GroomingServiceLine[] = [{ kind: "bath" }];
@@ -139,13 +154,15 @@ export async function createAppointment(input: {
   services?: GroomingServiceLine[];
   notes?: string;
 }): Promise<number> {
-  return (await db.appointments.add({
+  const id = (await db.appointments.add({
     dogId: input.dogId,
     start: input.start,
     end: input.end,
     services: input.services?.length ? input.services : defaultServices,
     notes: input.notes,
   })) as number;
+  notifyDropboxExport();
+  return id;
 }
 
 export async function updateAppointmentTimes(
@@ -156,6 +173,7 @@ export async function updateAppointmentTimes(
   const prev = await db.appointments.get(id);
   if (!prev) return;
   await db.appointments.put({ ...prev, start, end });
+  notifyDropboxExport();
 }
 
 export async function updateAppointment(input: {
@@ -176,8 +194,10 @@ export async function updateAppointment(input: {
     services: input.services,
     notes: input.notes,
   });
+  notifyDropboxExport();
 }
 
 export async function deleteAppointment(id: number): Promise<void> {
   await db.appointments.delete(id);
+  notifyDropboxExport();
 }
