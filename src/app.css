@@ -124,6 +124,16 @@ textarea {
   background: var(--color-surface);
 }
 
+/* Native date/time controls use a large intrinsic min-width; keep them inside the form. */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"] {
+  max-width: 100%;
+  min-width: 0;
+}
+
 label {
   display: block;
   font-size: 0.875rem;
