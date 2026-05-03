@@ -327,6 +327,7 @@
   .main {
     flex: 1 1 auto;
     min-height: 0;
+    min-width: 0;
     padding: var(--topbar-h) 0 var(--tabbar-h);
     overflow: auto;
   }
