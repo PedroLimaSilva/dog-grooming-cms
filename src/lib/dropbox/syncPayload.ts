@@ -1,4 +1,5 @@
 import type { Appointment, Dog, Owner } from "../../types";
+import { APP_VERSION } from "../appVersion";
 import { SYNC_SCHEMA_VERSION } from "./constants";
 
 export type SyncFilePayload = {
@@ -94,7 +95,8 @@ export function buildPayloadFromTables(input: {
   return {
     schemaVersion: SYNC_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
-    appBuild: import.meta.env.VITE_APP_BUILD?.trim() || undefined,
+    appBuild:
+      import.meta.env.VITE_APP_BUILD?.trim() || APP_VERSION || undefined,
     owners: input.owners.filter((o) => o.id != null) as Owner[],
     dogs: input.dogs.filter((d) => d.id != null) as Dog[],
     appointments: input.appointments.filter(
