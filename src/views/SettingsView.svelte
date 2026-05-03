@@ -17,6 +17,7 @@
     readBootstrapOAuthError,
   } from "../lib/dropbox/bootstrap";
   import { resetTopNav } from "../lib/topNav";
+  import { APP_VERSION } from "../lib/appVersion";
 
   let prefs = $state<DropboxSyncPrefs>(readDropboxSyncPrefs());
   let connectBusy = $state(false);
@@ -186,6 +187,10 @@
       </p>
     </div>
   </section>
+
+  <footer class="app-version" aria-label="App version">
+    Version {APP_VERSION}
+  </footer>
 </div>
 
 <style>
@@ -321,5 +326,13 @@
     margin: 0;
     color: var(--color-muted);
     line-height: 1.45;
+  }
+  .app-version {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    text-align: center;
   }
 </style>

@@ -1,7 +1,7 @@
 {
   "name": "dog-grooming-cms",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "packageManager": "yarn@4.14.1",
   "type": "module",
   "engines": {
