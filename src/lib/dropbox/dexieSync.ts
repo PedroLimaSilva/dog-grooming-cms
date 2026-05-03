@@ -1,6 +1,6 @@
 import type { Appointment, Dog, Owner } from "../../types";
 import { db } from "../../db";
-import type { SyncFilePayload } from "./syncPayload";
+import { plainSyncPayload, type SyncFilePayload } from "./syncPayload";
 
 export type TableCounts = {
   owners: number;
@@ -25,7 +25,7 @@ export async function isLocalDatabaseEmpty(): Promise<boolean> {
 export async function importRemoteSnapshotReplaceAll(
   payload: SyncFilePayload,
 ): Promise<void> {
-  const { owners, dogs, appointments } = payload;
+  const { owners, dogs, appointments } = plainSyncPayload(payload);
   await db.transaction("rw", db.owners, db.dogs, db.appointments, async () => {
     await db.appointments.clear();
     await db.dogs.clear();
@@ -66,6 +66,7 @@ function nextFreeId(used: Set<number>, startFrom: number): number {
 export async function mergeRemoteIntoLocal(
   payload: SyncFilePayload,
 ): Promise<void> {
+  payload = plainSyncPayload(payload);
   const localOwners = await db.owners.toArray();
   const localDogs = await db.dogs.toArray();
   const localAppts = await db.appointments.toArray();
