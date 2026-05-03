@@ -106,3 +106,11 @@ export function buildPayloadFromTables(input: {
 export function payloadHasAnyData(p: SyncFilePayload): boolean {
   return p.owners.length > 0 || p.dogs.length > 0 || p.appointments.length > 0;
 }
+
+/**
+ * Deep-copy via JSON so rows are plain objects IndexedDB can clone.
+ * Svelte 5 may wrap bootstrap payloads in reactive proxies; `db.put()` then throws DataCloneError.
+ */
+export function plainSyncPayload(payload: SyncFilePayload): SyncFilePayload {
+  return JSON.parse(JSON.stringify(payload)) as SyncFilePayload;
+}
