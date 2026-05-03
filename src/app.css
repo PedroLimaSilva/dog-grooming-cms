@@ -121,6 +121,7 @@ textarea {
   border-radius: 10px;
   border: 1px solid var(--color-border);
   width: 100%;
+  max-width: 100%;
   background: var(--color-surface);
 }
 
@@ -144,6 +145,8 @@ label {
 
 .field {
   margin-bottom: 1rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .sheet-backdrop {
