@@ -19,6 +19,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Required so Variables / Secrets attached to the `github-pages` environment
+    # (Settings → Environments → github-pages) are visible as `vars.*` / `secrets.*`.
+    environment: github-pages
     steps:
       - uses: actions/checkout@v4
 
@@ -35,14 +38,15 @@ jobs:
       - name: Format
         run: yarn format:check
 
-      # Vite embeds VITE_* at build time. GitHub "Pages" / UI env settings do not
-      # reach this step unless mapped here. Add repo secret VITE_DROPBOX_APP_KEY
-      # (Settings → Secrets and variables → Actions → Secrets).
+      # Vite embeds VITE_* at build time. Map repo OR environment variables here.
+      # Prefer Environment variables (github-pages): vars.VITE_* — requires
+      # `environment: github-pages` on this job. Fallback to repo Secrets for the key.
       - name: Build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
-          VITE_DROPBOX_APP_KEY: ${{ secrets.VITE_DROPBOX_APP_KEY }}
+          VITE_DROPBOX_APP_KEY: ${{ vars.VITE_DROPBOX_APP_KEY || secrets.VITE_DROPBOX_APP_KEY }}
           VITE_DROPBOX_REDIRECT_URI: ${{ vars.VITE_DROPBOX_REDIRECT_URI }}
+          VITE_APP_BUILD: ${{ vars.VITE_APP_BUILD }}
         run: yarn build
 
       - uses: actions/upload-pages-artifact@v3
