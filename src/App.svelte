@@ -276,7 +276,7 @@
         } else if (mode === "local_only") {
           await applyBootstrapLocalOnly();
         } else {
-          await applyBootstrapMergeBoth(c.remote);
+          await applyBootstrapMergeBoth(c.remote, c.remoteRev);
         }
       }}
     />

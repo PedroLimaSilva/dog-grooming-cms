@@ -11,7 +11,7 @@
     beginDropboxAuthorization,
     getDropboxAppKey,
   } from "../lib/dropbox/oauth";
-  import { exportCurrentDatabaseToDropbox } from "../lib/dropbox/exportUpload";
+  import { syncDropboxNow } from "../lib/dropbox/manualSync";
   import {
     clearBootstrapOAuthError,
     readBootstrapOAuthError,
@@ -20,7 +20,7 @@
 
   let prefs = $state<DropboxSyncPrefs>(readDropboxSyncPrefs());
   let connectBusy = $state(false);
-  let uploadBusy = $state(false);
+  let syncBusy = $state(false);
   let flashError = $state("");
   let flashOk = $state("");
 
@@ -58,18 +58,27 @@
     }
   }
 
-  async function uploadNow() {
+  async function syncNow() {
     flashError = "";
     flashOk = "";
-    uploadBusy = true;
+    syncBusy = true;
     try {
-      await exportCurrentDatabaseToDropbox();
-      flashOk = "Dropbox is up to date.";
+      const result = await syncDropboxNow({
+        confirmRemotePull: () =>
+          confirm(
+            "Dropbox has newer changes. Pull them to this device before uploading? This replaces the current data on this device with the Dropbox copy.",
+          ),
+      });
+      if (result.kind === "cancelled") return;
+      flashOk =
+        result.kind === "pulled"
+          ? "Pulled the latest Dropbox changes to this device."
+          : "Dropbox is up to date.";
       refreshPrefs();
     } catch (e) {
       flashError = e instanceof Error ? e.message : String(e);
     } finally {
-      uploadBusy = false;
+      syncBusy = false;
     }
   }
 
@@ -120,19 +129,19 @@
         {/if}
       </p>
       <p class="hint">
-        Local changes upload automatically after a short delay. If two devices
-        edit offline, Dropbox may reject an upload until you resolve the
-        conflict (reload vs overwrite).
+        Local changes upload automatically after a short delay. Sync now checks
+        Dropbox first; if another device has newer changes, this device pulls
+        them before uploading.
       </p>
       <div class="row-actions">
         <button
           type="button"
           class="primary"
-          disabled={uploadBusy}
-          onclick={() => void uploadNow()}
+          disabled={syncBusy}
+          onclick={() => void syncNow()}
         >
           <RefreshCw size={18} strokeWidth={2.2} aria-hidden="true" />
-          {uploadBusy ? "Uploading…" : "Upload now"}
+          {syncBusy ? "Syncing…" : "Sync now"}
         </button>
         <button type="button" class="danger" onclick={disconnectDropbox}>
           <CloudOff size={18} strokeWidth={2.2} aria-hidden="true" />

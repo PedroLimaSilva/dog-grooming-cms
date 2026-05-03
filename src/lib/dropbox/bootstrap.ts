@@ -92,8 +92,10 @@ export async function applyBootstrapLocalOnly(): Promise<void> {
 
 export async function applyBootstrapMergeBoth(
   remote: SyncFilePayload,
+  remoteRev: string,
 ): Promise<void> {
   await mergeRemoteIntoLocal(remote);
+  updateLastKnownRev(remoteRev);
   await exportCurrentDatabaseToDropbox();
 }
 
