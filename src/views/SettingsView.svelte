@@ -45,7 +45,7 @@
     flashOk = "";
     if (!appKeyConfigured) {
       flashError =
-        "Add VITE_DROPBOX_APP_KEY to .env (see .env.example), restart the dev server, then try again.";
+        "Add VITE_DROPBOX_APP_KEY to .env locally, or as a GitHub Actions repository secret for Pages builds (see .env.example), then rebuild/redeploy.";
       return;
     }
     connectBusy = true;
@@ -146,8 +146,11 @@
       </p>
       {#if !appKeyConfigured}
         <p class="warn">
-          Set <code>VITE_DROPBOX_APP_KEY</code> in <code>.env</code> and add the
-          same redirect URI in the Dropbox app settings (see
+          Local dev: set <code>VITE_DROPBOX_APP_KEY</code> in <code>.env</code>
+          and restart Vite. GitHub Pages: add the same name as a
+          <strong>repository secret</strong> (Actions → Secrets), because Vite
+          bakes it in at build time — the Pages UI does not inject it. Then push
+          to redeploy. Match your live URL as a Dropbox redirect URI (see
           <code>.env.example</code>).
         </p>
       {/if}

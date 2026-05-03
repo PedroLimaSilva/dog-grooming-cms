@@ -35,9 +35,14 @@ jobs:
       - name: Format
         run: yarn format:check
 
+      # Vite embeds VITE_* at build time. GitHub "Pages" / UI env settings do not
+      # reach this step unless mapped here. Add repo secret VITE_DROPBOX_APP_KEY
+      # (Settings → Secrets and variables → Actions → Secrets).
       - name: Build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_DROPBOX_APP_KEY: ${{ secrets.VITE_DROPBOX_APP_KEY }}
+          VITE_DROPBOX_REDIRECT_URI: ${{ vars.VITE_DROPBOX_REDIRECT_URI }}
         run: yarn build
 
       - uses: actions/upload-pages-artifact@v3
