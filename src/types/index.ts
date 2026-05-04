@@ -1,9 +1,14 @@
+/** Language the owner prefers for prefilled WhatsApp text (UI stays English). */
+export type OwnerPrimaryLanguage = "en" | "es" | "pt";
+
 /** Point of contact for one or more dogs */
 export type Owner = {
   id?: number;
   name: string;
   phone?: string;
   email?: string;
+  /** If missing (older data), treat as English. */
+  primaryLanguage?: OwnerPrimaryLanguage;
 };
 
 /** Grooming client (dog) */
