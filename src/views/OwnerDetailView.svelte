@@ -165,6 +165,7 @@
           <option value="en">English</option>
           <option value="es">Spanish</option>
           <option value="pt">Portuguese</option>
+          <option value="fr">French</option>
         </select>
         <p class="field-hint">
           Used only for the prefilled text when you open WhatsApp with this owner.

@@ -1,5 +1,5 @@
 /** Language the owner prefers for prefilled WhatsApp text (UI stays English). */
-export type OwnerPrimaryLanguage = "en" | "es" | "pt";
+export type OwnerPrimaryLanguage = "en" | "es" | "pt" | "fr";
 
 /** Point of contact for one or more dogs */
 export type Owner = {

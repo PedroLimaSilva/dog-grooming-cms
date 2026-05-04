@@ -26,9 +26,9 @@ export function parseSyncFileJson(text: string): SyncFilePayload {
     throw new Error("Sync file must be a JSON object.");
   }
   const schemaVersion = root.schemaVersion;
-  if (schemaVersion !== 1 && schemaVersion !== 2) {
+  if (schemaVersion !== 1 && schemaVersion !== 2 && schemaVersion !== 3) {
     throw new Error(
-      `Unsupported sync schema version: ${String(schemaVersion)} (expected 1 or 2).`,
+      `Unsupported sync schema version: ${String(schemaVersion)} (expected 1, 2, or 3).`,
     );
   }
   if (typeof root.exportedAt !== "string") {
@@ -56,7 +56,8 @@ export function parseSyncFileJson(text: string): SyncFilePayload {
       o.primaryLanguage != null &&
       o.primaryLanguage !== "en" &&
       o.primaryLanguage !== "es" &&
-      o.primaryLanguage !== "pt"
+      o.primaryLanguage !== "pt" &&
+      o.primaryLanguage !== "fr"
     ) {
       throw new Error("Invalid owner.primaryLanguage in sync file.");
     }
