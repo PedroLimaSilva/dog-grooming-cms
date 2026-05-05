@@ -42,9 +42,7 @@ export function dogOwnerWhatsAppGreeting(
         ? `Hola, esto es sobre ${trimmed}. `
         : "Hola, esto es sobre su perro. ";
     case "pt":
-      return trimmed
-        ? `Oi, é sobre o ${trimmed}. `
-        : "Oi, é sobre o seu cão. ";
+      return trimmed ? `Oi, é sobre o ${trimmed}. ` : "Oi, é sobre o seu cão. ";
     case "fr":
       return trimmed
         ? `Bonjour, c'est au sujet de ${trimmed}. `
