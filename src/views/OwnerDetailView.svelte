@@ -4,8 +4,10 @@
   import type { DogRecord, OwnerRecord } from "../db";
   import { db, deleteOwner, upsertOwner } from "../db";
   import { navigateTo } from "../lib/hashRoute";
+  import { ownerDetailWhatsAppGreeting } from "../lib/ownerWhatsAppGreeting";
   import { resetTopNav, setTopNav, type OverflowAction } from "../lib/topNav";
   import { phoneDigitsForWhatsApp, whatsAppChatUrl } from "../lib/whatsapp";
+  import type { OwnerPrimaryLanguage } from "../types";
 
   type Props = { mode: "new" | "edit"; ownerId?: number };
 
@@ -17,6 +19,7 @@
 
   let name = $state("");
   let phone = $state("");
+  let primaryLanguage = $state<OwnerPrimaryLanguage>("en");
   let err = $state("");
   let saving = $state(false);
 
@@ -54,6 +57,7 @@
     if (mode !== "edit" || !owner) return;
     name = owner.name;
     phone = owner.phone ?? "";
+    primaryLanguage = owner.primaryLanguage ?? "en";
   });
 
   async function save() {
@@ -68,6 +72,7 @@
         id: mode === "edit" ? ownerId : undefined,
         name: name.trim(),
         phone: phone.trim(),
+        primaryLanguage,
       });
       navigateTo({ name: "owners", segment: { id } });
     } catch (e) {
@@ -92,7 +97,10 @@
 
   const whatsAppOwnerHref = $derived.by(() => {
     if (!phoneDigitsForWhatsApp(phone)) return "";
-    return whatsAppChatUrl(phone, `Hi ${name.trim() || "there"}, `);
+    return whatsAppChatUrl(
+      phone,
+      ownerDetailWhatsAppGreeting(name, primaryLanguage),
+    );
   });
 
   $effect(() => {
@@ -151,6 +159,18 @@
         <label for="ophone">Phone</label>
         <input id="ophone" bind:value={phone} type="tel" autocomplete="tel" />
       </div>
+      <div class="field">
+        <label for="olang">Primary language</label>
+        <select id="olang" bind:value={primaryLanguage}>
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="pt">Portuguese</option>
+          <option value="fr">French</option>
+        </select>
+        <p class="field-hint">
+          Used only for the prefilled text when you open WhatsApp with this owner.
+        </p>
+      </div>
       {#if err}<p class="error-text">{err}</p>{/if}
     </form>
 
@@ -195,5 +215,11 @@
   }
   .subtle {
     padding-top: 0;
+  }
+  .field-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    line-height: 1.35;
   }
 </style>

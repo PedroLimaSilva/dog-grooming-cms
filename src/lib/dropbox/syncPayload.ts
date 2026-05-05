@@ -26,9 +26,9 @@ export function parseSyncFileJson(text: string): SyncFilePayload {
     throw new Error("Sync file must be a JSON object.");
   }
   const schemaVersion = root.schemaVersion;
-  if (schemaVersion !== 1) {
+  if (schemaVersion !== 1 && schemaVersion !== 2 && schemaVersion !== 3) {
     throw new Error(
-      `Unsupported sync schema version: ${String(schemaVersion)} (expected 1).`,
+      `Unsupported sync schema version: ${String(schemaVersion)} (expected 1, 2, or 3).`,
     );
   }
   if (typeof root.exportedAt !== "string") {
@@ -52,6 +52,15 @@ export function parseSyncFileJson(text: string): SyncFilePayload {
     if (typeof o?.id !== "number" || typeof o.name !== "string") {
       throw new Error("Invalid owner row in sync file.");
     }
+    if (
+      o.primaryLanguage != null &&
+      o.primaryLanguage !== "en" &&
+      o.primaryLanguage !== "es" &&
+      o.primaryLanguage !== "pt" &&
+      o.primaryLanguage !== "fr"
+    ) {
+      throw new Error("Invalid owner.primaryLanguage in sync file.");
+    }
   }
   for (const d of dogs) {
     if (typeof d?.id !== "number" || typeof d.name !== "string") {
@@ -74,7 +83,7 @@ export function parseSyncFileJson(text: string): SyncFilePayload {
   }
 
   return {
-    schemaVersion: 1,
+    schemaVersion,
     exportedAt: root.exportedAt,
     appBuild: typeof root.appBuild === "string" ? root.appBuild : undefined,
     owners,

@@ -5,6 +5,7 @@
   import type { DogRecord, OwnerRecord } from "../db";
   import { createQuickOwner, db, deleteDog, upsertDog } from "../db";
   import { navigateTo } from "../lib/hashRoute";
+  import { dogOwnerWhatsAppGreeting } from "../lib/ownerWhatsAppGreeting";
   import { resetTopNav, setTopNav, type OverflowAction } from "../lib/topNav";
   import { phoneDigitsForWhatsApp, whatsAppChatUrl } from "../lib/whatsapp";
 
@@ -123,8 +124,11 @@
     if (!o?.phone) return "";
     const digits = phoneDigitsForWhatsApp(o.phone);
     if (!digits) return "";
-    const dogName = name.trim() || dog?.name || "my dog";
-    return whatsAppChatUrl(o.phone, `Hi, this is regarding ${dogName}. `);
+    const dogName = name.trim() || dog?.name || "";
+    return whatsAppChatUrl(
+      o.phone,
+      dogOwnerWhatsAppGreeting(dogName, o.primaryLanguage),
+    );
   });
 
   $effect(() => {

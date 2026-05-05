@@ -24,6 +24,11 @@ export class GroomingDB extends Dexie {
       dogs: "++id, primaryOwnerId, name",
       appointments: "++id, dogId, start",
     });
+    this.version(3).stores({
+      owners: "++id, name",
+      dogs: "++id, primaryOwnerId, name",
+      appointments: "++id, dogId, start",
+    });
   }
 }
 
@@ -100,6 +105,7 @@ export async function upsertOwner(row: OwnerRecord): Promise<number> {
     name: row.name,
     phone: row.phone,
     email: row.email,
+    primaryLanguage: row.primaryLanguage,
   })) as number;
   notifyDropboxExport();
   return id;
