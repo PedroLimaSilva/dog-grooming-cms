@@ -168,7 +168,8 @@
           <option value="fr">French</option>
         </select>
         <p class="field-hint">
-          Used only for the prefilled text when you open WhatsApp with this owner.
+          Used only for the prefilled text when you open WhatsApp with this
+          owner.
         </p>
       </div>
       {#if err}<p class="error-text">{err}</p>{/if}
