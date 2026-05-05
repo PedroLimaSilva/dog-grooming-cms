@@ -15,8 +15,11 @@
 
   let dogId = $state<number | "">("");
   let startLocal = $state("");
-  /** Length of visit in minutes; end = start + duration */
-  let durationMinutes = $state(60);
+  /** Length of visit in hours; end = start + duration */
+  let durationHours = $state(1);
+
+  /** Minimum duration expressed in hours (5 minutes). */
+  const MIN_HOURS = 5 / 60;
   let notes = $state("");
   let bath = $state(false);
   let cut = $state(false);
@@ -64,9 +67,11 @@
       err = "";
       dogId = appointment.dogId;
       startLocal = toLocalInput(appointment.start);
-      durationMinutes = Math.max(
-        5,
-        Math.round((appointment.end - appointment.start) / 60_000) || 60,
+      const minutes =
+        Math.round((appointment.end - appointment.start) / 60_000) || 60;
+      durationHours = Math.max(
+        MIN_HOURS,
+        Math.round((minutes / 60) * 100) / 100,
       );
       notes = appointment.notes ?? "";
       applyLines(appointment.services ?? [{ kind: "bath" }]);
@@ -76,9 +81,9 @@
   const computedEndMs = $derived.by(() => {
     if (!startLocal) return 0;
     const start = fromLocalInput(startLocal);
-    const d = Number(durationMinutes);
-    if (!Number.isFinite(d) || d < 5) return start;
-    return start + d * 60_000;
+    const h = Number(durationHours);
+    if (!Number.isFinite(h) || h < MIN_HOURS) return start;
+    return start + Math.round(h * 60) * 60_000;
   });
 
   async function save() {
@@ -89,12 +94,12 @@
       return;
     }
     const start = fromLocalInput(startLocal);
-    const d = Number(durationMinutes);
-    if (!Number.isFinite(d) || d < 5) {
+    const h = Number(durationHours);
+    if (!Number.isFinite(h) || h < MIN_HOURS) {
       err = "Duration must be at least 5 minutes.";
       return;
     }
-    const end = start + d * 60_000;
+    const end = start + Math.round(h * 60) * 60_000;
     saving = true;
     try {
       await updateAppointment({
@@ -148,7 +153,15 @@
       onclick={(e) => e.stopPropagation()}
       onkeydown={(e) => e.stopPropagation()}
     >
-      <h2 id="move-title">Appointment</h2>
+      <div class="sheet-header">
+        <h2 id="move-title">Appointment</h2>
+        <div class="sheet-header-actions">
+          <button type="button" class="primary" onclick={save} disabled={saving}
+            >Save</button
+          >
+          <button type="button" onclick={onclose}>Close</button>
+        </div>
+      </div>
 
       <div class="field">
         <label for="mdog">Dog</label>
@@ -166,13 +179,13 @@
         <input id="mstart" type="datetime-local" bind:value={startLocal} />
       </div>
       <div class="field">
-        <label for="mdur">Duration (minutes)</label>
+        <label for="mdur">Duration (hours)</label>
         <input
           id="mdur"
           type="number"
-          min="5"
-          step="5"
-          bind:value={durationMinutes}
+          min={MIN_HOURS}
+          step="0.25"
+          bind:value={durationHours}
         />
         <p class="end-preview">
           Ends {new Date(computedEndMs).toLocaleString([], {
@@ -212,10 +225,6 @@
       {#if err}<p class="error-text">{err}</p>{/if}
 
       <div class="row-actions">
-        <button type="button" class="primary" onclick={save} disabled={saving}
-          >Save</button
-        >
-        <button type="button" onclick={onclose}>Close</button>
         <button type="button" class="danger" onclick={remove} disabled={saving}
           >Delete</button
         >
@@ -225,6 +234,34 @@
 {/if}
 
 <style>
+  .sheet-header {
+    position: sticky;
+    top: -1rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: -1rem -1rem 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .sheet-header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .sheet-header-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .sheet-header {
+      top: -1.25rem;
+      margin: -1.25rem -1.25rem 1rem;
+      padding: 0.85rem 1.25rem;
+    }
+  }
   .end-preview {
     margin: 0.4rem 0 0;
     font-size: 0.875rem;

@@ -17,8 +17,8 @@
     $props();
 
   let dogId = $state<number | "">("");
-  /** Visit length; end = start + duration */
-  let durationMinutes = $state(60);
+  /** Visit length in hours; end = start + duration */
+  let durationHours = $state(1);
   let notes = $state("");
   let bath = $state(true);
   let cut = $state(false);
@@ -28,21 +28,28 @@
   let saving = $state(false);
   let err = $state("");
 
+  /** Minimum duration expressed in hours (5 minutes). */
+  const MIN_HOURS = 5 / 60;
+
   $effect(() => {
     if (open) {
       err = "";
       if (dogs.length === 1 && dogs[0].id != null) dogId = dogs[0].id;
       else dogId = "";
-      const span = Math.round(
+      const spanMinutes = Math.round(
         (defaultEnd.getTime() - defaultStart.getTime()) / 60_000,
       );
-      durationMinutes = Math.max(5, span || 60);
+      const hours = (spanMinutes || 60) / 60;
+      durationHours = Math.max(MIN_HOURS, Math.round(hours * 100) / 100);
     }
   });
 
   const computedEnd = $derived.by(() => {
-    const d = Number(durationMinutes);
-    const add = Number.isFinite(d) && d >= 5 ? d * 60_000 : 60 * 60_000;
+    const h = Number(durationHours);
+    const add =
+      Number.isFinite(h) && h >= MIN_HOURS
+        ? Math.round(h * 60) * 60_000
+        : 60 * 60_000;
     return new Date(defaultStart.getTime() + add);
   });
 
@@ -69,17 +76,18 @@
       err = "Choose a dog.";
       return;
     }
-    const d = Number(durationMinutes);
-    if (!Number.isFinite(d) || d < 5) {
+    const h = Number(durationHours);
+    if (!Number.isFinite(h) || h < MIN_HOURS) {
       err = "Duration must be at least 5 minutes.";
       return;
     }
+    const minutes = Math.round(h * 60);
     saving = true;
     try {
       await createAppointment({
         dogId: Number(dogId),
         start: defaultStart.getTime(),
-        end: defaultStart.getTime() + d * 60_000,
+        end: defaultStart.getTime() + minutes * 60_000,
         services: lines(),
         notes: notes.trim() || undefined,
       });
@@ -111,7 +119,21 @@
       onclick={(e) => e.stopPropagation()}
       onkeydown={(e) => e.stopPropagation()}
     >
-      <h2 id="appt-title">New appointment</h2>
+      <div class="sheet-header">
+        <h2 id="appt-title">New appointment</h2>
+        <div class="sheet-header-actions">
+          <button
+            type="button"
+            class="primary"
+            onclick={save}
+            disabled={saving}
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button type="button" onclick={onclose}>Cancel</button>
+        </div>
+      </div>
+
       <p class="muted">
         Starts {defaultStart.toLocaleString([], {
           dateStyle: "medium",
@@ -120,13 +142,13 @@
       </p>
 
       <div class="field">
-        <label for="dur">Duration (minutes)</label>
+        <label for="dur">Duration (hours)</label>
         <input
           id="dur"
           type="number"
-          min="5"
-          step="5"
-          bind:value={durationMinutes}
+          min={MIN_HOURS}
+          step="0.25"
+          bind:value={durationHours}
         />
         <p class="muted end-line">
           Ends {computedEnd.toLocaleString([], {
@@ -184,18 +206,39 @@
       </div>
 
       {#if err}<p class="error-text">{err}</p>{/if}
-
-      <div class="row-actions">
-        <button type="button" class="primary" onclick={save} disabled={saving}>
-          {saving ? "Saving…" : "Save"}
-        </button>
-        <button type="button" onclick={onclose}>Cancel</button>
-      </div>
     </div>
   </div>
 {/if}
 
 <style>
+  .sheet-header {
+    position: sticky;
+    top: -1rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: -1rem -1rem 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .sheet-header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .sheet-header-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .sheet-header {
+      top: -1.25rem;
+      margin: -1.25rem -1.25rem 1rem;
+      padding: 0.85rem 1.25rem;
+    }
+  }
   .muted {
     margin: 0 0 1rem;
     color: var(--color-muted);
